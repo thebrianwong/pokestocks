@@ -50,7 +50,7 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, stocks [][]string) {
 
 	for _, stock := range stocks {
 		data := stockInfo{symbol: stock[0], name: stock[1]}
-		query := "INSERT INTO stock (symbol, name) VALUES ($1, $2)"
+		query := "INSERT INTO stocks (symbol, name) VALUES ($1, $2)"
 		_, err := tx.Conn().Exec(ctx, query, data.symbol, data.name)
 		if err != nil {
 			log.Fatalf("Error inserting "+data.symbol+" into db: %v", err)
