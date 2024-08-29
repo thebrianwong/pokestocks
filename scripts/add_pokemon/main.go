@@ -33,6 +33,11 @@ type typeSpriteData struct {
 	sprite string
 }
 
+type transformedData struct {
+	pokemonName string
+	*typeSpriteData
+}
+
 type pokemonTypeName struct {
 	Name string `json:"name"`
 }
@@ -103,8 +108,28 @@ func readTypeSpriteJson(file string) []typeSpriteData {
 	return data
 }
 
+func combineData(nameData []string, typeSpriteData []typeSpriteData) []transformedData {
+	data := []transformedData{}
+
+	for i := 0; i < len(nameData); i++ {
+		tsData := typeSpriteData[i]
+		pokemonName := nameData[i]
+
+		combinedData := transformedData{
+			typeSpriteData: &tsData,
+			pokemonName:    pokemonName,
+		}
+
+		data = append(data, combinedData)
+	}
+
+	return data
+}
+
 func main() {
 	names := readNameJson("../../data/pokemon_names.json")
 	types := readTypeSpriteJson("../../data/pokemon_types_sprites.json")
+
+	transformedData := combineData(names, types)
 
 }
