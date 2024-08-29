@@ -28,6 +28,7 @@ func readNameJson(file string) []string {
 }
 
 type typeSpriteData struct {
+	id     int
 	type1  string
 	type2  string
 	sprite string
@@ -88,20 +89,24 @@ func readTypeSpriteJson(file string) []typeSpriteData {
 		log.Fatalf("Error reading type and sprite data into memory: %v", err)
 	}
 	for _, obj := range rawData {
+		var id int
 		var type1 string
 		var type2 string
 		var sprite string
 
-		types := obj.PokemonAggregate.Pokemon[0].PokemonTypes
+		pokemon := obj.PokemonAggregate.Pokemon[0]
+
+		id = pokemon.Id
+		types := pokemon.PokemonTypes
 		type1 = types[0].PokemonTypeName.Name
 		type1 = caser.String(type1)
 		if len(types) == 2 {
 			type2 = types[1].PokemonTypeName.Name
 			type2 = caser.String(type2)
 		}
-		sprite = obj.PokemonAggregate.Pokemon[0].SpritesAggregate.Sprites[0].SpriteUrl
+		sprite = pokemon.SpritesAggregate.Sprites[0].SpriteUrl
 
-		objData := typeSpriteData{type1, type2, sprite}
+		objData := typeSpriteData{id, type1, type2, sprite}
 		data = append(data, objData)
 	}
 
