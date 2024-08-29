@@ -1,0 +1,78 @@
+[
+  {
+    "name": "normal",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/1.png"
+  },
+  {
+    "name": "fighting",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/2.png"
+  },
+  {
+    "name": "flying",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/3.png"
+  },
+  {
+    "name": "poison",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/4.png"
+  },
+  {
+    "name": "ground",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/5.png"
+  },
+  {
+    "name": "rock",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/6.png"
+  },
+  {
+    "name": "bug",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/7.png"
+  },
+  {
+    "name": "ghost",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/8.png"
+  },
+  {
+    "name": "steel",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/9.png"
+  },
+  {
+    "name": "fire",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/10.png"
+  },
+  {
+    "name": "water",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/11.png"
+  },
+  {
+    "name": "grass",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/12.png"
+  },
+  {
+    "name": "electric",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/13.png"
+  },
+  {
+    "name": "psychic",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/14.png"
+  },
+  {
+    "name": "ice",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/15.png"
+  },
+  {
+    "name": "dragon",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/16.png"
+  },
+  {
+    "name": "dark",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/17.png"
+  },
+  {
+    "name": "fairy",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/18.png"
+  },
+  {
+    "name": "stellar",
+    "url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-ix/scarlet-violet/19.png"
+  }
+]
