@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
+	"pokestocks/utils"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -131,10 +135,59 @@ func combineData(nameData []string, typeSpriteData []typeSpriteData) []transform
 	return data
 }
 
+func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedData) {
+	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
+	tx, err := db.BeginTx(ctx, options)
+	if err != nil {
+		log.Fatalf("Error starting db transaction: %v", err)
+	}
+
+	defer tx.Rollback(ctx)
+
+	for _, pokemon := range pokemonData {
+		var _ pgconn.CommandTag
+		var err error
+
+		if pokemon.type2 != "" {
+			query := `
+				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
+					VALUES ($1, $2,
+					(SELECT id FROM pokemon_types WHERE type=$3),
+					(SELECT id FROM pokemon_types WHERE type=$4),
+					$5)
+			`
+			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.type2, pokemon.sprite)
+		} else {
+			query := `
+				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
+					VALUES ($1, $2,
+					(SELECT id FROM pokemon_types WHERE type=$3),
+					NULL,
+					$4)
+			`
+			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.sprite)
+		}
+		if err != nil {
+			log.Fatalf("Error inserting "+pokemon.pokemonName+" into db: %v", err)
+			return
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		log.Fatalf("Error committing db transaction: %v", err)
+		return
+	}
+}
+
 func main() {
+	utils.LoadEnvVars("../../.env")
+	conn := utils.ConnectToDb()
+
 	names := readNameJson("../../data/pokemon_names.json")
 	types := readTypeSpriteJson("../../data/pokemon_types_sprites.json")
 
 	transformedData := combineData(names, types)
 
+	insertIntoDb(context.Background(), conn, transformedData)
 }
