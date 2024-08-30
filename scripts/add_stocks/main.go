@@ -48,6 +48,7 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, stocks [][]string) {
 
 	defer tx.Rollback(ctx)
 
+	batch := pgx.Batch{}
 	for _, stock := range stocks {
 		data := stockInfo{symbol: stock[0], name: stock[1]}
 		query := `
@@ -60,11 +61,16 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, stocks [][]string) {
 				WHERE stocks.symbol = data.symbol
 			)
 		`
-		_, err := tx.Conn().Exec(ctx, query, data.symbol, data.name)
+		batch.Queue(query, data.symbol, data.name)
 		if err != nil {
 			log.Fatalf("Error inserting "+data.symbol+" into db: %v", err)
 			return
 		}
+	}
+
+	err = db.SendBatch(ctx, &batch).Close()
+	if err != nil {
+		log.Fatalf("Error sending batch inserts: %v", err)
 	}
 
 	err = tx.Commit(ctx)
