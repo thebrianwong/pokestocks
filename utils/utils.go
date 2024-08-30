@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -28,4 +29,15 @@ func ConnectToDb() *pgx.Conn {
 		log.Fatalln("Unable to connect to database:", err)
 	}
 	return conn
+}
+
+func GetSeasonName() string {
+	if len(os.Args) != 2 {
+		log.Fatalln("You must provide a season name.\nUsage: go run main.go [name]")
+		fmt.Println("go run main.go $SEASON_NAME")
+	}
+
+	seasonName := os.Args[1]
+
+	return seasonName
 }
