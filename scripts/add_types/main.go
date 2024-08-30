@@ -53,7 +53,16 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, tData []typeData) {
 	defer tx.Rollback(ctx)
 
 	for _, data := range tData {
-		query := "INSERT INTO pokemon_types (type, sprite_url) VALUES ($1, $2)"
+		query := `
+			INSERT INTO pokemon_types (type, sprite_url)
+			SELECT type, sprite_url
+			FROM (VALUES ($1, $2)) AS data(type, sprite_url)
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM pokemon_types
+				WHERE pokemon_types.type = data.type
+			)
+		`
 		_, err := tx.Conn().Exec(ctx, query, data.Name, data.Sprite)
 		if err != nil {
 			log.Fatalf("Error inserting "+data.Name+" type into db: %v", err)
