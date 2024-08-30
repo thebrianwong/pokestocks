@@ -151,19 +151,41 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedDa
 		if pokemon.type2 != "" {
 			query := `
 				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
-					VALUES ($1, $2,
+				SELECT name, pokedex_number, type_1_id, type_2_id, sprite_url
+				FROM (VALUES (
+					$1, 
+					$2::INTEGER,
 					(SELECT id FROM pokemon_types WHERE type=$3),
 					(SELECT id FROM pokemon_types WHERE type=$4),
-					$5)
+					$5
+				))
+				AS data(name, pokedex_number, type_1_id, type_2_id, sprite_url)
+				WHERE NOT EXISTS (
+					SELECT 1
+					FROM pokemon
+					WHERE pokemon.name = data.name
+					AND pokemon.pokedex_number = data.pokedex_number
+				)
 			`
 			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.type2, pokemon.sprite)
 		} else {
 			query := `
 				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
-					VALUES ($1, $2,
+				SELECT name, pokedex_number, type_1_id, type_2_id, sprite_url
+				FROM (VALUES (
+					$1, 
+					$2::INTEGER,
 					(SELECT id FROM pokemon_types WHERE type=$3),
-					NULL,
-					$4)
+					NULL::BIGINT,
+					$4
+				))
+				AS data(name, pokedex_number, type_1_id, type_2_id, sprite_url)
+				WHERE NOT EXISTS (
+					SELECT 1
+					FROM pokemon
+					WHERE pokemon.name = data.name
+					AND pokemon.pokedex_number = data.pokedex_number
+				)
 			`
 			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.sprite)
 		}
