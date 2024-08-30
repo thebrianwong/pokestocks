@@ -8,7 +8,6 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -144,10 +143,8 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedDa
 
 	defer tx.Rollback(ctx)
 
+	batch := pgx.Batch{}
 	for _, pokemon := range pokemonData {
-		var _ pgconn.CommandTag
-		var err error
-
 		if pokemon.type2 != "" {
 			query := `
 				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
@@ -167,7 +164,7 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedDa
 					AND pokemon.pokedex_number = data.pokedex_number
 				)
 			`
-			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.type2, pokemon.sprite)
+			batch.Queue(query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.type2, pokemon.sprite)
 		} else {
 			query := `
 				INSERT INTO pokemon (name, pokedex_number, type_1_id, type_2_id, sprite_url)
@@ -187,12 +184,13 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedDa
 					AND pokemon.pokedex_number = data.pokedex_number
 				)
 			`
-			_, err = tx.Conn().Exec(ctx, query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.sprite)
+			batch.Queue(query, pokemon.pokemonName, pokemon.id, pokemon.type1, pokemon.sprite)
 		}
-		if err != nil {
-			log.Fatalf("Error inserting "+pokemon.pokemonName+" into db: %v", err)
-			return
-		}
+	}
+
+	err = db.SendBatch(ctx, &batch).Close()
+	if err != nil {
+		log.Fatalf("Error sending batch inserts: %v", err)
 	}
 
 	err = tx.Commit(ctx)
