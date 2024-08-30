@@ -52,6 +52,7 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, tData []typeData) {
 
 	defer tx.Rollback(ctx)
 
+	batch := pgx.Batch{}
 	for _, data := range tData {
 		query := `
 			INSERT INTO pokemon_types (type, sprite_url)
@@ -63,11 +64,12 @@ func insertIntoDb(ctx context.Context, db *pgx.Conn, tData []typeData) {
 				WHERE pokemon_types.type = data.type
 			)
 		`
-		_, err := tx.Conn().Exec(ctx, query, data.Name, data.Sprite)
-		if err != nil {
-			log.Fatalf("Error inserting "+data.Name+" type into db: %v", err)
-			return
-		}
+		batch.Queue(query, data.Name, data.Sprite)
+	}
+
+	err = db.SendBatch(ctx, &batch).Close()
+	if err != nil {
+		log.Fatalf("Error sending batch inserts: %v", err)
 	}
 
 	err = tx.Commit(ctx)
