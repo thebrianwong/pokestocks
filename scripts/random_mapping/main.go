@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/rand"
 	"pokestocks/utils"
@@ -75,6 +74,7 @@ func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgx.Conn, pokedexN
 
 	defer tx.Rollback(ctx)
 
+	batch := pgx.Batch{}
 	for i := 0; i < len(pokedexNumbers); i++ {
 		pokemonStockPair := pokemonStockPair{
 			pokemonPokedexNumber: pokedexNumbers[i],
@@ -96,13 +96,12 @@ func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgx.Conn, pokedexN
 				AND pokemon_stock_pairs.season_id = data.season_id
 			)
 		`
-		_, err := tx.Conn().Exec(ctx, query, pokemonStockPair.pokemonPokedexNumber, pokemonStockPair.stockId, seasonName)
-		if err != nil {
-			log.Fatalf(
-				"Error inserting pair "+fmt.Sprint(pokemonStockPair.pokemonPokedexNumber)+" "+fmt.Sprint(pokemonStockPair.stockId)+" into db: %v",
-				err,
-			)
-		}
+		batch.Queue(query, pokemonStockPair.pokemonPokedexNumber, pokemonStockPair.stockId, seasonName)
+	}
+
+	err = db.SendBatch(ctx, &batch).Close()
+	if err != nil {
+		log.Fatalf("Error sending batch inserts: %v", err)
 	}
 
 	err = tx.Commit(ctx)
