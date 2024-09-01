@@ -23,7 +23,12 @@ func LoadEnvVars(path string) {
 }
 
 func ConnectToDb() *pgx.Conn {
-	dbUrl := os.Getenv("DATABASE_URL")
+	dbUser := os.Getenv("PG_USER")
+	dbPassword := os.Getenv("PG_PASSWORD")
+	dbHost := os.Getenv("PG_HOST")
+	dbPort := os.Getenv("PG_PORT")
+	dbName := os.Getenv("PG_NAME")
+	dbUrl := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName
 	conn, err := pgx.Connect(context.Background(), dbUrl)
 	if err != nil {
 		log.Fatalln("Unable to connect to database:", err)
