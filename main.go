@@ -6,8 +6,8 @@ import (
 	"os"
 	"pokestocks/utils"
 
-	pokemon_stock_pair_pb "pokestocks/proto/pokemon_stock_pair"
-	"pokestocks/services/pokemon_stock_pair"
+	psp_pb "pokestocks/proto/pokemon_stock_pair"
+	psp_service "pokestocks/services/pokemon_stock_pair"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pokemon_stock_pair_pb.RegisterPokemonStockPairServiceServer(s, &pokemon_stock_pair.Server{DB: conn})
+	psp_pb.RegisterPokemonStockPairServiceServer(s, &psp_service.Server{DB: conn})
 
 	reflection.Register(s)
 
