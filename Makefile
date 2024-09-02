@@ -26,3 +26,9 @@ seed_db:
 		go run main.go
 	cd scripts/random_mapping/; \
 		go run main.go ${seasonName}
+
+.PHONY: proto
+proto:
+	protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/common/common.proto

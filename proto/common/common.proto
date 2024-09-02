@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/common";
+
+package common;
+
+import "google/protobuf/timestamp.proto";
+
+message Season {
+  int64 id = 1;
+  string name = 2;
+  bool active = 3;
+}
+
+message PokemonType {
+  int64 id = 1;
+  string type = 2;
+  string spriteUrl = 3;
+}
+
+message Pokemon {
+  int64 id = 1;
+  string name = 2;
+  int32 pokedexNumber = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  PokemonType type1 = 6;
+  PokemonType type2 = 7;
+  string spriteUrl = 8;
+}
+
+message Stock {
+  int64 id = 1;
+  string symbol = 2;
+  string name = 3;
+}
+
+message PokemonStockPair {
+  int64 id = 1;
+  Pokemon pokemon = 2;
+  Stock stock = 3;
+  Season season = 4;
+}
