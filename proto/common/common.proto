@@ -33,6 +33,9 @@ message Stock {
   int64 id = 1;
   string symbol = 2;
   string name = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  bool active = 6;
 }
 
 message PokemonStockPair {
