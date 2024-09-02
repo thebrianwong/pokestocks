@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/pokemon_stock_pair";
+
+package pokemon_stock_pair;
+
+import "proto/common/common.proto";
+
+service PokemonStockPairService {
+  rpc GetAllPokemonStockPairs(GetAllPokemonStockPairsRequest) returns (GetAllPokemonStockPairsResponse);
+}
+
+message GetAllPokemonStockPairsRequest {};
+
+message GetAllPokemonStockPairsResponse {
+  repeated common.PokemonStockPair data = 1;
+}
+
