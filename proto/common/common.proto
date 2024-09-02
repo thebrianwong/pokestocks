@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "pokestocks/common";
+option go_package = "pokestocks/proto/common";
 
 package common;
 
