@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	common_pb "pokestocks/proto/common"
@@ -203,12 +204,6 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 		}
 
 		psp := convertDbRowToPokemonStockPair(queriedData)
-		price, err := getStockPrice(psp.Stock.Symbol)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error querying price data for %v: %v", psp.Stock.Symbol, err)
-		}
-		psp.Stock.Price = &price
-
 		psps = append(psps, psp)
 	}
 
@@ -216,5 +211,29 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 		return nil, status.Errorf(codes.Internal, "error reading queried data: %v", err)
 	}
 
-	return &psp_pb.GetPokemonStockPairResponse{Data: psps}, nil
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(psps))
+	defer close(errChan)
+
+	for _, psp := range psps {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			stockPrice, err := getStockPrice(psp.Stock.Symbol)
+			if err != nil {
+				errChan <- err
+			}
+			psp.Stock.Price = &stockPrice
+		}()
+	}
+
+	wg.Wait()
+
+	select {
+	case err := <-errChan:
+		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
+	default:
+		return &psp_pb.GetPokemonStockPairResponse{Data: psps}, nil
+	}
 }
