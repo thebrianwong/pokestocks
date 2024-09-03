@@ -4,15 +4,9 @@ option go_package = "pokestocks/proto/pokemon_stock_pair";
 
 package pokemon_stock_pair;
 
-import "proto/common/common.proto";
+import "proto/pokemon_stock_pair/get_all_pokemon_stock_pairs_request.proto";
+import "proto/pokemon_stock_pair/get_all_pokemon_stock_pairs_response.proto";
 
 service PokemonStockPairService {
   rpc GetAllPokemonStockPairs(GetAllPokemonStockPairsRequest) returns (GetAllPokemonStockPairsResponse);
 }
-
-message GetAllPokemonStockPairsRequest {};
-
-message GetAllPokemonStockPairsResponse {
-  repeated common.PokemonStockPair data = 1;
-}
-

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/common";
+
+package common;
+
+import "google/protobuf/timestamp.proto";
+import "proto/common/pokemon_type.proto";
+
+message Pokemon {
+  int64 id = 1;
+  string name = 2;
+  int32 pokedexNumber = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  PokemonType type1 = 6;
+  PokemonType type2 = 7;
+  string spriteUrl = 8;
+}

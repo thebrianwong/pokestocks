@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/common";
+
+package common;
+
+message PokemonType {
+  int64 id = 1;
+  string type = 2;
+  string spriteUrl = 3;
+}

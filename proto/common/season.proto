@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/common";
+
+package common;
+
+message Season {
+  int64 id = 1;
+  string name = 2;
+  bool active = 3;
+}

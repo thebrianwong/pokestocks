@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/common";
+
+package common;
+
+import "proto/common/pokemon.proto";
+import "proto/common/stock.proto";
+import "proto/common/season.proto";
+
+message PokemonStockPair {
+  int64 id = 1;
+  Pokemon pokemon = 2;
+  Stock stock = 3;
+  Season season = 4;
+}

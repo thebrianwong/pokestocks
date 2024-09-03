@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.27.3
-// source: proto/pokemon_stock_pair/pokemon_stock_pair.proto
+// source: proto/pokemon_stock_pair/pokemon_stock_pair_service.proto
 
 package pokemon_stock_pair
 
@@ -118,5 +118,5 @@ var PokemonStockPairService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/pokemon_stock_pair/pokemon_stock_pair.proto",
+	Metadata: "proto/pokemon_stock_pair/pokemon_stock_pair_service.proto",
 }
