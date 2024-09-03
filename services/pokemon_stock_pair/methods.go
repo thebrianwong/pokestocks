@@ -9,6 +9,7 @@ import (
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 
+	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,6 +58,20 @@ func convertDbRowToPokemonStockPair(rowDataMap map[string]any) *common_pb.Pokemo
 	}
 
 	return &psp
+}
+
+func getStockPrice(symbol string) (float64, error) {
+	client := marketdata.NewClient(marketdata.ClientOpts{})
+
+	requestParams := marketdata.GetLatestTradeRequest{}
+
+	data, err := client.GetLatestTrade(symbol, requestParams)
+	if err != nil {
+		return 0, err
+	}
+
+	stockPrice := data.Price
+	return stockPrice, nil
 }
 
 func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllPokemonStockPairsRequest) (*psp_pb.GetAllPokemonStockPairsResponse, error) {
@@ -188,6 +203,12 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 		}
 
 		psp := convertDbRowToPokemonStockPair(queriedData)
+		price, err := getStockPrice(psp.Stock.Symbol)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error querying price data for %v: %v", psp.Stock.Symbol, err)
+		}
+		psp.Stock.Price = &price
+
 		psps = append(psps, psp)
 	}
 
