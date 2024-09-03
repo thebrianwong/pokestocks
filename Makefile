@@ -31,7 +31,4 @@ seed_db:
 proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/common/common.proto
-	protoc --go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/pokemon_stock_pair/pokemon_stock_pair.proto
+		proto/**/*.proto
