@@ -8,6 +8,7 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -39,7 +40,7 @@ func getTopStocks(stocks [][]string) [][]string {
 	return stocks[1:(numOfPokemon + 1)]
 }
 
-func insertIntoDb(ctx context.Context, db *pgx.Conn, stocks [][]string) {
+func insertIntoDb(ctx context.Context, db *pgxpool.Pool, stocks [][]string) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {

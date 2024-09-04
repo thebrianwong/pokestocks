@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
@@ -23,14 +23,15 @@ func LoadEnvVars(path string) {
 	}
 }
 
-func ConnectToDb() *pgx.Conn {
+func ConnectToDb() *pgxpool.Pool {
 	dbUser := os.Getenv("PG_USER")
 	dbPassword := os.Getenv("PG_PASSWORD")
 	dbHost := os.Getenv("PG_HOST")
 	dbPort := os.Getenv("PG_PORT")
 	dbName := os.Getenv("PG_NAME")
 	dbUrl := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName
-	conn, err := pgx.Connect(context.Background(), dbUrl)
+	// conn, err := pgx.Connect(context.Background(), dbUrl)
+	conn, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
 		log.Fatalln("Unable to connect to database:", err)
 	}

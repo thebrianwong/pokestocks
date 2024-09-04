@@ -8,6 +8,7 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -43,7 +44,7 @@ func readTypesJson(file string) []typeData {
 	return data
 }
 
-func insertIntoDb(ctx context.Context, db *pgx.Conn, tData []typeData) {
+func insertIntoDb(ctx context.Context, db *pgxpool.Pool, tData []typeData) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {

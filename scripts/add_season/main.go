@@ -6,9 +6,10 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func insertIntoDb(ctx context.Context, db *pgx.Conn, seasonName string) {
+func insertIntoDb(ctx context.Context, db *pgxpool.Pool, seasonName string) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {

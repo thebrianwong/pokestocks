@@ -7,6 +7,7 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -33,7 +34,7 @@ func randomPokedexNumbers() []int {
 	return random
 }
 
-func getStockIds(ctx context.Context, db *pgx.Conn) []int {
+func getStockIds(ctx context.Context, db *pgxpool.Pool) []int {
 	query := "SELECT id FROM stocks"
 	rows, err := db.Query(ctx, query)
 	if err != nil {
@@ -61,7 +62,7 @@ func getStockIds(ctx context.Context, db *pgx.Conn) []int {
 	return stockIds
 }
 
-func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgx.Conn, pokedexNumbers []int, stockIds []int, seasonName string) {
+func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgxpool.Pool, pokedexNumbers []int, stockIds []int, seasonName string) {
 	if len(pokedexNumbers) != len(stockIds) {
 		log.Fatal("The number of Pokemon do not match the number of stocks. Query the stocks table and check how many rows exist.")
 	}

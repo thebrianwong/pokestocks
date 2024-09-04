@@ -8,6 +8,7 @@ import (
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -134,7 +135,7 @@ func combineData(nameData []string, typeSpriteData []typeSpriteData) []transform
 	return data
 }
 
-func insertIntoDb(ctx context.Context, db *pgx.Conn, pokemonData []transformedData) {
+func insertIntoDb(ctx context.Context, db *pgxpool.Pool, pokemonData []transformedData) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
