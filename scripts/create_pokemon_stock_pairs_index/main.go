@@ -65,6 +65,6 @@ func main() {
 	).Do(context.TODO())
 
 	if err != nil {
-		log.Fatalf("Error creating pokemon_stock_pair_index: %v", err)
+		log.Fatalf("Error creating pokemon_stock_pairs_index: %v", err)
 	}
 }
