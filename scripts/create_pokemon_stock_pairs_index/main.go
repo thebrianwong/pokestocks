@@ -67,4 +67,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating pokemon_stock_pairs_index: %v", err)
 	}
+	log.Println("Successfully created pokemon_stock_pairs_index")
 }
