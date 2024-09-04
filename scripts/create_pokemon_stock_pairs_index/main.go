@@ -11,7 +11,7 @@ import (
 
 func main() {
 	utils.LoadEnvVars("../../.env")
-	elasticClient := utils.ConnectToElastic()
+	elasticClient := utils.ConnectToElastic("../../http_ca.crt")
 
 	_, err := elasticClient.Indices.Create("pokemon_stock_pairs_index").Request(
 		&create.Request{

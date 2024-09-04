@@ -48,12 +48,13 @@ func GetSeasonName() string {
 	return seasonName
 }
 
-func ConnectToElastic() *elasticsearch.TypedClient {
+func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
 	elasticUsername := os.Getenv("ELASTIC_USERNAME")
 	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
 	// elasticApiKey := os.Getenv("ELASTIC_API_KEY")
 	elasticEndpoint := os.Getenv(("ELASTIC_ENDPOINT"))
-	cert, err := os.ReadFile("../../http_ca.crt")
+	// cert, err := os.ReadFile("../../http_ca.crt")
+	cert, err := os.ReadFile(certPath)
 	if err != nil {
 		log.Fatalf("Error reading Elasticsearch certificate: %v", err)
 	}
