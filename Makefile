@@ -32,3 +32,9 @@ proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/**/*.proto
+
+remake_psp_index:
+	cd scripts/delete_pokemon_stock_pairs_index/; \
+		go run main.go
+	cd scripts/create_pokemon_stock_pairs_index/; \
+		go run main.go
