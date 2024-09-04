@@ -22,7 +22,7 @@ func main() {
 						Properties: map[string]types.Property{
 							"id":             types.NewIntegerNumberProperty(),
 							"name":           types.NewTextProperty(),
-							"pokedex_number": types.NewIntegerNumberProperty(),
+							"pokedex_number": types.NewKeywordProperty(),
 							"created_at":     types.NewDateProperty(),
 							"updated_at":     types.NewDateProperty(),
 							"sprite_url":     types.NewKeywordProperty(),
