@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 )
@@ -45,4 +46,28 @@ func GetSeasonName() string {
 	seasonName := os.Args[1]
 
 	return seasonName
+}
+
+func ConnectToElastic() *elasticsearch.TypedClient {
+	elasticUsername := os.Getenv("ELASTIC_USERNAME")
+	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
+	// elasticApiKey := os.Getenv("ELASTIC_API_KEY")
+	elasticEndpoint := os.Getenv(("ELASTIC_ENDPOINT"))
+	cert, err := os.ReadFile("../../http_ca.crt")
+	if err != nil {
+		log.Fatalf("Error reading Elasticsearch certificate: %v", err)
+	}
+	elasticClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
+		// APIKey:    elasticApiKey,
+		Addresses: []string{elasticEndpoint},
+		Username:  elasticUsername,
+		Password:  elasticPassword,
+		CACert:    cert,
+	})
+
+	if err != nil {
+		log.Fatalf("Error connecting to Elasticsearch: %v", err)
+	}
+
+	return elasticClient
 }
