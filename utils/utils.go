@@ -30,7 +30,6 @@ func ConnectToDb() *pgxpool.Pool {
 	dbPort := os.Getenv("PG_PORT")
 	dbName := os.Getenv("PG_NAME")
 	dbUrl := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName
-	// conn, err := pgx.Connect(context.Background(), dbUrl)
 	conn, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
 		log.Fatalln("Unable to connect to database:", err)
