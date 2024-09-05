@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"pokestocks/utils"
 )
 
@@ -15,5 +14,5 @@ func main() {
 	if err != nil {
 		utils.LogFailureError("Error deleting pokemon_stock_pairs_index", err)
 	}
-	log.Println("Successfully deleted pokemon_stock_pairs_index")
+	utils.LogSuccess("Successfully deleted pokemon_stock_pairs_index")
 }

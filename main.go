@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"os"
 	"pokestocks/utils"
@@ -28,7 +27,7 @@ func main() {
 
 	reflection.Register(s)
 
-	log.Printf("gRPC server listening at %v", lis.Addr())
+	utils.LogSuccess("gRPC server listening at " + lis.Addr().String())
 	if err := s.Serve(lis); err != nil {
 		utils.LogFailureError("Failed to serve", err)
 	}

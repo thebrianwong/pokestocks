@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"pokestocks/utils"
 	"sync"
 
@@ -153,6 +152,6 @@ func main() {
 	case err := <-errChan:
 		utils.LogFailureError("Error indexing PSPs into Elasticsearch", err)
 	default:
-		fmt.Println("Successfully indexed PSPs into Elasticsearch")
+		utils.LogSuccess("Successfully indexed PSPs into Elasticsearch")
 	}
 }

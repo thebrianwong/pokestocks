@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"pokestocks/utils"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/create"
@@ -70,5 +69,5 @@ func main() {
 	if err != nil {
 		utils.LogFailureError("Error creating pokemon_stock_pairs_index", err)
 	}
-	log.Println("Successfully created pokemon_stock_pairs_index")
+	utils.LogSuccess("Successfully created pokemon_stock_pairs_index")
 }

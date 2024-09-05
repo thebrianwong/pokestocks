@@ -12,6 +12,7 @@ import (
 
 const (
 	Red   = "\033[31m"
+	Green = "\033[32m"
 	Cyan  = "\033[36m"
 	Reset = "\033[0m"
 )
@@ -83,4 +84,8 @@ func LogFailureError(message string, err error) {
 
 func LogFailure(message string) {
 	log.Fatalf(Red + message + Reset)
+}
+
+func LogSuccess(message string) {
+	log.Println(Green + message + Reset)
 }
