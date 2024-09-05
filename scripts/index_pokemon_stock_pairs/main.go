@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"pokestocks/internal/structs"
 	"pokestocks/utils"
 	"sync"
 
@@ -9,28 +10,6 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/count"
 	"github.com/jackc/pgx/v5"
 )
-
-type pokemonPayload struct {
-	Id            int64  `json:"id"`
-	Name          string `json:"name"`
-	PokedexNumber int32  `json:"pokedex_number"`
-	Type1         string `json:"type_1"`
-	Type2         string `json:"type_2"`
-}
-
-type stockPayload struct {
-	Id     int64  `json:"id"`
-	Symbol string `json:"symbol"`
-	Name   string `json:"name"`
-	Active bool   `json:"active"`
-}
-
-type pspIndexPayload struct {
-	Id           int64          `json:"id"`
-	Pokemon      pokemonPayload `json:"pokemon"`
-	Stock        stockPayload   `json:"stock"`
-	ActiveSeason bool           `json:"active_season"`
-}
 
 func getPspIndexDocCount(elasticClient *elasticsearch.TypedClient) (*(count.Response), error) {
 	count, err := elasticClient.Count().Index("pokemon_stock_pairs_index").Do(context.Background())
@@ -42,16 +21,16 @@ func getPspIndexDocCount(elasticClient *elasticsearch.TypedClient) (*(count.Resp
 	return count, nil
 }
 
-func convertDbRowToIndexPayload(rowDataMap map[string]any) pspIndexPayload {
-	payload := pspIndexPayload{
+func convertDbRowToIndexPayload(rowDataMap map[string]any) structs.PspElasticDocument {
+	payload := structs.PspElasticDocument{
 		Id: rowDataMap["pspId"].(int64),
-		Pokemon: pokemonPayload{
+		Pokemon: structs.PspNestedPokemon{
 			Id:            rowDataMap["pokemonId"].(int64),
 			Name:          rowDataMap["pokemonName"].(string),
 			PokedexNumber: rowDataMap["pokedexNumber"].(int32),
 			Type1:         rowDataMap["type1Name"].(string),
 		},
-		Stock: stockPayload{
+		Stock: structs.PspNestedStock{
 			Id:     rowDataMap["stockId"].(int64),
 			Symbol: rowDataMap["stockSymbol"].(string),
 			Name:   rowDataMap["stockName"].(string),
@@ -68,7 +47,7 @@ func convertDbRowToIndexPayload(rowDataMap map[string]any) pspIndexPayload {
 	return payload
 }
 
-func indexPspPayload(elasticClient *elasticsearch.TypedClient, payload pspIndexPayload) error {
+func indexPspPayload(elasticClient *elasticsearch.TypedClient, payload structs.PspElasticDocument) error {
 	_, err := elasticClient.Index("pokemon_stock_pairs_index").Request(payload).Do(context.Background())
 
 	return err
@@ -114,7 +93,7 @@ func main() {
 	}
 	defer rows.Close()
 
-	var payloads []pspIndexPayload
+	var payloads []structs.PspElasticDocument
 
 	for rows.Next() {
 		queriedData, err := pgx.RowToMap(rows)
