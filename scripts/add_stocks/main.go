@@ -65,7 +65,6 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, stocks [][]string) {
 		batch.Queue(query, data.symbol, data.name)
 		if err != nil {
 			log.Fatalf("Error inserting "+data.symbol+" into db: %v", err)
-			return
 		}
 	}
 
@@ -77,7 +76,6 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, stocks [][]string) {
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Fatalf("Error committing db transaction: %v", err)
-		return
 	}
 }
 

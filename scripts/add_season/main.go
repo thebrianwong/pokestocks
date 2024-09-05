@@ -31,13 +31,11 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, seasonName string) {
 	_, err = tx.Conn().Exec(ctx, query, seasonName)
 	if err != nil {
 		log.Fatalf("Error inserting season "+seasonName+" into db: %v", err)
-		return
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Fatalf("Error committing db transaction: %v", err)
-		return
 	}
 }
 

@@ -76,7 +76,6 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, tData []typeData) {
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Fatalf("Error committing db transaction: %v", err)
-		return
 	}
 }
 
