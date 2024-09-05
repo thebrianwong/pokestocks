@@ -23,42 +23,45 @@ func main() {
 							"id":             types.NewIntegerNumberProperty(),
 							"name":           types.NewTextProperty(),
 							"pokedex_number": types.NewKeywordProperty(),
-							"created_at":     types.NewDateProperty(),
-							"updated_at":     types.NewDateProperty(),
-							"sprite_url":     types.NewKeywordProperty(),
-							"type_1": types.NestedProperty{
-								Properties: map[string]types.Property{
-									"id":         types.NewIntegerNumberProperty(),
-									"type":       types.NewKeywordProperty(),
-									"sprite_url": types.NewKeywordProperty(),
-								},
-							},
-							"type_2": types.NestedProperty{
-								Properties: map[string]types.Property{
-									"id":         types.NewIntegerNumberProperty(),
-									"type":       types.NewKeywordProperty(),
-									"sprite_url": types.NewKeywordProperty(),
-								},
-							},
+							// "created_at":     types.NewDateProperty(),
+							// "updated_at":     types.NewDateProperty(),
+							// "sprite_url":     types.NewKeywordProperty(),
+							"type_1": types.NewKeywordProperty(),
+							"type_2": types.NewKeywordProperty(),
+							// "type_1": types.NestedProperty{
+							// 	Properties: map[string]types.Property{
+							// 		"id":         types.NewIntegerNumberProperty(),
+							// 		"type":       types.NewKeywordProperty(),
+							// 		"sprite_url": types.NewKeywordProperty(),
+							// 	},
+							// },
+							// "type_2": types.NestedProperty{
+							// 	Properties: map[string]types.Property{
+							// 		"id":         types.NewIntegerNumberProperty(),
+							// 		"type":       types.NewKeywordProperty(),
+							// 		"sprite_url": types.NewKeywordProperty(),
+							// 	},
+							// },
 						},
 					},
 					"stock": types.NestedProperty{
 						Properties: map[string]types.Property{
-							"id":         types.NewIntegerNumberProperty(),
-							"symbol":     types.NewKeywordProperty(),
-							"name":       types.NewTextProperty(),
-							"created_at": types.NewDateProperty(),
-							"updated_at": types.NewDateProperty(),
-							"active":     types.NewBooleanProperty(),
-						},
-					},
-					"season": types.NestedProperty{
-						Properties: map[string]types.Property{
 							"id":     types.NewIntegerNumberProperty(),
-							"name":   types.NewKeywordProperty(),
+							"symbol": types.NewKeywordProperty(),
+							"name":   types.NewTextProperty(),
+							// "created_at": types.NewDateProperty(),
+							// "updated_at": types.NewDateProperty(),
 							"active": types.NewBooleanProperty(),
 						},
 					},
+					"active_season": types.NewBooleanProperty(),
+					// "season": types.NestedProperty{
+					// 	Properties: map[string]types.Property{
+					// 		"id":     types.NewIntegerNumberProperty(),
+					// 		"name":   types.NewKeywordProperty(),
+					// 		"active": types.NewBooleanProperty(),
+					// 	},
+					// },
 				},
 			},
 		},
