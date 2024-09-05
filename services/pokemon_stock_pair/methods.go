@@ -2,7 +2,6 @@ package pokemon_stock_pair
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -112,7 +111,7 @@ func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllP
 	`
 	rows, err := db.Query(ctx, query)
 	if err != nil {
-		log.Fatalf("Error querying PSPs: %v", err)
+		return nil, status.Errorf(codes.Internal, "error while querying PSPs: %v", err)
 	}
 	defer rows.Close()
 
@@ -121,7 +120,7 @@ func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllP
 	for rows.Next() {
 		queriedData, err := pgx.RowToMap(rows)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "error converting queried data to map: %v", err)
 		}
 
 		psp := convertDbRowToPokemonStockPair(queriedData)
@@ -129,7 +128,7 @@ func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllP
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "error reading queried data: %v", err)
 	}
 
 	return &psp_pb.GetAllPokemonStockPairsResponse{Data: psps}, nil
