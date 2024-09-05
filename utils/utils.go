@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -46,7 +45,6 @@ func ConnectToDb() *pgxpool.Pool {
 func GetSeasonName() string {
 	if len(os.Args) != 2 {
 		LogFailure("You must provide a season name.\n" + Cyan + "Usage: go run main.go [name]")
-		fmt.Println("go run main.go $SEASON_NAME")
 	}
 
 	seasonName := os.Args[1]
