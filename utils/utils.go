@@ -11,6 +11,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	Red   = "\033[31m"
+	Cyan  = "\033[36m"
+	Reset = "\033[0m"
+)
+
 func LoadEnvVars(path string) {
 	var err error
 	if path == "" {
@@ -19,7 +25,7 @@ func LoadEnvVars(path string) {
 		err = godotenv.Load(path)
 	}
 	if err != nil {
-		log.Fatalln("Error loading .env file")
+		LogFailureError("Error loading .env file", err)
 	}
 }
 
@@ -32,14 +38,14 @@ func ConnectToDb() *pgxpool.Pool {
 	dbUrl := "postgres://" + dbUser + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName
 	conn, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		log.Fatalln("Unable to connect to database:", err)
+		LogFailureError("Unable to connect to database", err)
 	}
 	return conn
 }
 
 func GetSeasonName() string {
 	if len(os.Args) != 2 {
-		log.Fatalln("You must provide a season name.\nUsage: go run main.go [name]")
+		LogFailure("You must provide a season name.\n" + Cyan + "Usage: go run main.go [name]")
 		fmt.Println("go run main.go $SEASON_NAME")
 	}
 
@@ -56,7 +62,7 @@ func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
 	// cert, err := os.ReadFile("../../http_ca.crt")
 	cert, err := os.ReadFile(certPath)
 	if err != nil {
-		log.Fatalf("Error reading Elasticsearch certificate: %v", err)
+		LogFailureError("Error reading Elasticsearch certificate", err)
 	}
 	elasticClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
 		// APIKey:    elasticApiKey,
@@ -67,8 +73,16 @@ func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
 	})
 
 	if err != nil {
-		log.Fatalf("Error connecting to Elasticsearch: %v", err)
+		LogFailureError("Error connecting to Elasticsearch", err)
 	}
 
 	return elasticClient
+}
+
+func LogFailureError(message string, err error) {
+	log.Fatalf(Red+message+": %v"+Reset, err)
+}
+
+func LogFailure(message string) {
+	log.Fatalf(Red + message + Reset)
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"pokestocks/utils"
 	"sync"
 
@@ -83,10 +82,10 @@ func main() {
 
 	count, err := getPspIndexDocCount(elasticClient)
 	if err != nil {
-		log.Fatalf("Error starting PSP indexing: %v", err)
+		utils.LogFailureError("Error starting PSP indexing", err)
 	}
 	if count.Count > 0 {
-		log.Fatal(" Error starting PSP indexing: the index already contains PSPs")
+		utils.LogFailure("Error starting PSP indexing: the index already contains PSPs")
 	}
 
 	query := `
@@ -112,7 +111,7 @@ func main() {
 	`
 	rows, err := conn.Query(context.Background(), query)
 	if err != nil {
-		log.Fatalf("Error querying PSPs: %v", err)
+		utils.LogFailureError("Error querying PSPs", err)
 	}
 	defer rows.Close()
 
@@ -121,7 +120,7 @@ func main() {
 	for rows.Next() {
 		queriedData, err := pgx.RowToMap(rows)
 		if err != nil {
-			log.Fatalf("Error reading individual row: %v", err)
+			utils.LogFailureError("Error reading individual row", err)
 		}
 
 		payload := convertDbRowToIndexPayload(queriedData)
@@ -129,7 +128,7 @@ func main() {
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatalf("Error reading queried rows: %v", err)
+		utils.LogFailureError("Error reading queried rows", err)
 	}
 
 	var wg sync.WaitGroup
@@ -152,7 +151,7 @@ func main() {
 
 	select {
 	case err := <-errChan:
-		log.Fatalf("Error indexing PSPs into Elasticsearch: %v", err)
+		utils.LogFailureError("Error indexing PSPs into Elasticsearch", err)
 	default:
 		fmt.Println("Successfully indexed PSPs into Elasticsearch")
 	}

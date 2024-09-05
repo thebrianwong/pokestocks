@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"math/rand"
 	"pokestocks/utils"
 
@@ -38,7 +37,7 @@ func getStockIds(ctx context.Context, db *pgxpool.Pool) []int {
 	query := "SELECT id FROM stocks"
 	rows, err := db.Query(ctx, query)
 	if err != nil {
-		log.Fatalf("Error querying stock ids: %v", err)
+		utils.LogFailureError("Error querying stock ids", err)
 	}
 	defer rows.Close()
 
@@ -49,14 +48,14 @@ func getStockIds(ctx context.Context, db *pgxpool.Pool) []int {
 
 		err := rows.Scan(&stockId)
 		if err != nil {
-			log.Fatalf("Error reading stock id: %v", err)
+			utils.LogFailureError("Error reading stock id", err)
 		}
 
 		stockIds = append(stockIds, stockId)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatalf("Error while finishing up reading rows: %v", err)
+		utils.LogFailureError("Error while finishing up reading rows", err)
 	}
 
 	return stockIds
@@ -64,13 +63,13 @@ func getStockIds(ctx context.Context, db *pgxpool.Pool) []int {
 
 func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgxpool.Pool, pokedexNumbers []int, stockIds []int, seasonName string) {
 	if len(pokedexNumbers) != len(stockIds) {
-		log.Fatal("The number of Pokemon do not match the number of stocks. Query the stocks table and check how many rows exist.")
+		utils.LogFailure("The number of Pokemon do not match the number of stocks. Query the stocks table and check how many rows exist.")
 	}
 
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
-		log.Fatalf("Error starting db transaction: %v", err)
+		utils.LogFailureError("Error starting db transaction", err)
 	}
 
 	defer tx.Rollback(ctx)
@@ -102,12 +101,12 @@ func insertRandomPokemonStocksIntoDb(ctx context.Context, db *pgxpool.Pool, poke
 
 	err = db.SendBatch(ctx, &batch).Close()
 	if err != nil {
-		log.Fatalf("Error sending batch inserts: %v", err)
+		utils.LogFailureError("Error sending batch inserts", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatalf("Error committing db transaction: %v", err)
+		utils.LogFailureError("Error committing db transaction", err)
 	}
 }
 

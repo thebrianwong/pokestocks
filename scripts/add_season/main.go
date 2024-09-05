@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"pokestocks/utils"
 
 	"github.com/jackc/pgx/v5"
@@ -13,7 +12,7 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, seasonName string) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
-		log.Fatalf("Error starting db transaction: %v", err)
+		utils.LogFailureError("Error starting db transaction", err)
 	}
 
 	defer tx.Rollback(ctx)
@@ -30,12 +29,12 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, seasonName string) {
 	`
 	_, err = tx.Conn().Exec(ctx, query, seasonName)
 	if err != nil {
-		log.Fatalf("Error inserting season "+seasonName+" into db: %v", err)
+		utils.LogFailureError("Error inserting season "+seasonName+" into db", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatalf("Error committing db transaction: %v", err)
+		utils.LogFailureError("Error committing db transaction", err)
 	}
 }
 

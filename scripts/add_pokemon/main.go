@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"pokestocks/utils"
 
@@ -18,14 +17,14 @@ func readNameJson(file string) []string {
 
 	f, err := os.Open(file)
 	if err != nil {
-		log.Fatalf("Error opening json file: %v", err)
+		utils.LogFailureError("Error opening json file", err)
 	}
 	defer f.Close()
 
 	dec := json.NewDecoder(f)
 	err = dec.Decode(&data)
 	if err != nil {
-		log.Fatalf("Error reading name data into memory: %v", err)
+		utils.LogFailureError("Error reading name data into memory", err)
 	}
 
 	return data
@@ -80,7 +79,7 @@ func readTypeSpriteJson(file string) []typeSpriteData {
 
 	f, err := os.Open(file)
 	if err != nil {
-		log.Fatalf("Error opening json file: %v", err)
+		utils.LogFailureError("Error opening json file", err)
 	}
 	defer f.Close()
 
@@ -90,7 +89,7 @@ func readTypeSpriteJson(file string) []typeSpriteData {
 	rawData := []rawData{}
 	err = dec.Decode(&rawData)
 	if err != nil {
-		log.Fatalf("Error reading type and sprite data into memory: %v", err)
+		utils.LogFailureError("Error reading type and sprite data into memory", err)
 	}
 	for _, obj := range rawData {
 		var id int
@@ -139,7 +138,7 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, pokemonData []transform
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
-		log.Fatalf("Error starting db transaction: %v", err)
+		utils.LogFailureError("Error starting db transaction", err)
 	}
 
 	defer tx.Rollback(ctx)
@@ -191,13 +190,12 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, pokemonData []transform
 
 	err = db.SendBatch(ctx, &batch).Close()
 	if err != nil {
-		log.Fatalf("Error sending batch inserts: %v", err)
+		utils.LogFailureError("Error sending batch inserts", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatalf("Error committing db transaction: %v", err)
-		return
+		utils.LogFailureError("Error committing db transaction", err)
 	}
 }
 

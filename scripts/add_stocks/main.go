@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/csv"
-	"log"
 	"os"
 	"pokestocks/utils"
 
@@ -23,14 +22,14 @@ type stockInfo struct {
 func readCsv(file string) [][]string {
 	f, err := os.Open(file)
 	if err != nil {
-		log.Fatal("Error opening csv file")
+		utils.LogFailureError("Error opening csv file", err)
 	}
 	defer f.Close()
 
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		log.Fatal("Error reading csv file")
+		utils.LogFailureError("Error reading csv file", err)
 	}
 
 	return records
@@ -44,7 +43,7 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, stocks [][]string) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
-		log.Fatalf("Error starting db transaction: %v", err)
+		utils.LogFailureError("Error starting db transaction", err)
 	}
 
 	defer tx.Rollback(ctx)
@@ -64,18 +63,18 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, stocks [][]string) {
 		`
 		batch.Queue(query, data.symbol, data.name)
 		if err != nil {
-			log.Fatalf("Error inserting "+data.symbol+" into db: %v", err)
+			utils.LogFailureError("Error inserting "+data.symbol+" into db", err)
 		}
 	}
 
 	err = db.SendBatch(ctx, &batch).Close()
 	if err != nil {
-		log.Fatalf("Error sending batch inserts: %v", err)
+		utils.LogFailureError("Error sending batch inserts", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatalf("Error committing db transaction: %v", err)
+		utils.LogFailureError("Error committing db transaction", err)
 	}
 }
 

@@ -13,7 +13,7 @@ func main() {
 	_, err := elasticClient.Indices.Delete("pokemon_stock_pairs_index").Do(context.TODO())
 
 	if err != nil {
-		log.Fatalf("Error deleting pokemon_stock_pairs_index: %v", err)
+		utils.LogFailureError("Error deleting pokemon_stock_pairs_index", err)
 	}
 	log.Println("Successfully deleted pokemon_stock_pairs_index")
 }

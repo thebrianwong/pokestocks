@@ -20,7 +20,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("failed to listen on port %v: %v", port, err)
+		utils.LogFailureError("Failed to listen on port "+port, err)
 	}
 
 	s := grpc.NewServer()
@@ -30,6 +30,6 @@ func main() {
 
 	log.Printf("gRPC server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		utils.LogFailureError("Failed to serve", err)
 	}
 }

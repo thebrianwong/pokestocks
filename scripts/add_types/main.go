@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"pokestocks/utils"
 
@@ -23,7 +22,7 @@ func readTypesJson(file string) []typeData {
 
 	f, err := os.Open(file)
 	if err != nil {
-		log.Fatalf("Error opening json file: %v", err)
+		utils.LogFailureError("Error opening json file", err)
 	}
 	defer f.Close()
 
@@ -33,7 +32,7 @@ func readTypesJson(file string) []typeData {
 	dec := json.NewDecoder(f)
 	err = dec.Decode(&rawData)
 	if err != nil {
-		log.Fatalf("Error reading type data into memory: %v", err)
+		utils.LogFailureError("Error reading type data into memory", err)
 	}
 
 	for _, dataObj := range rawData {
@@ -48,7 +47,7 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, tData []typeData) {
 	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
 	tx, err := db.BeginTx(ctx, options)
 	if err != nil {
-		log.Fatalf("Error starting db transaction: %v", err)
+		utils.LogFailureError("Error starting db transaction", err)
 	}
 
 	defer tx.Rollback(ctx)
@@ -70,12 +69,12 @@ func insertIntoDb(ctx context.Context, db *pgxpool.Pool, tData []typeData) {
 
 	err = db.SendBatch(ctx, &batch).Close()
 	if err != nil {
-		log.Fatalf("Error sending batch inserts: %v", err)
+		utils.LogFailureError("Error sending batch inserts", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		log.Fatalf("Error committing db transaction: %v", err)
+		utils.LogFailureError("Error committing db transaction", err)
 	}
 }
 
