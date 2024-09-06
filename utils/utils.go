@@ -78,6 +78,30 @@ func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
 	return elasticClient
 }
 
+func CreateRegularElasticClient(certPath string) *elasticsearch.Client {
+	elasticUsername := os.Getenv("ELASTIC_USERNAME")
+	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
+	// elasticApiKey := os.Getenv("ELASTIC_API_KEY")
+	elasticEndpoint := os.Getenv(("ELASTIC_ENDPOINT"))
+	cert, err := os.ReadFile(certPath)
+	if err != nil {
+		LogFailureError("Error reading Elasticsearch certificate", err)
+	}
+	elasticClient, err := elasticsearch.NewClient(elasticsearch.Config{
+		// APIKey:    elasticApiKey,
+		Addresses: []string{elasticEndpoint},
+		Username:  elasticUsername,
+		Password:  elasticPassword,
+		CACert:    cert,
+	})
+
+	if err != nil {
+		LogFailureError("Error creating regular Elasticsearch client", err)
+	}
+
+	return elasticClient
+}
+
 func LogFailureError(message string, err error) {
 	log.Fatalf(Red+message+": %v"+Reset, err)
 }
