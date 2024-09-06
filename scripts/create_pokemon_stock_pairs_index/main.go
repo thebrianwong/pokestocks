@@ -64,7 +64,7 @@ func main() {
 				},
 			},
 		},
-	).Do(context.TODO())
+	).Do(context.Background())
 
 	if err != nil {
 		utils.LogFailureError("Error creating pokemon_stock_pairs_index", err)
