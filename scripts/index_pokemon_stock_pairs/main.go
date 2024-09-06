@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"pokestocks/internal/structs"
 	"pokestocks/utils"
-	"sync"
+	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esutil"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/count"
-	"github.com/jackc/pgx/v5"
 )
 
 func getPspIndexDocCount(elasticClient *elasticsearch.TypedClient) (*(count.Response), error) {
@@ -21,42 +20,15 @@ func getPspIndexDocCount(elasticClient *elasticsearch.TypedClient) (*(count.Resp
 	return count, nil
 }
 
-func convertDbRowToIndexPayload(rowDataMap map[string]any) structs.PspElasticDocument {
-	payload := structs.PspElasticDocument{
-		Id: rowDataMap["pspId"].(int64),
-		Pokemon: structs.PspNestedPokemon{
-			Id:            rowDataMap["pokemonId"].(int64),
-			Name:          rowDataMap["pokemonName"].(string),
-			PokedexNumber: rowDataMap["pokedexNumber"].(int32),
-			Type1:         rowDataMap["type1Name"].(string),
-		},
-		Stock: structs.PspNestedStock{
-			Id:     rowDataMap["stockId"].(int64),
-			Symbol: rowDataMap["stockSymbol"].(string),
-			Name:   rowDataMap["stockName"].(string),
-			Active: rowDataMap["stockActive"].(bool),
-		},
-		ActiveSeason: rowDataMap["seasonActive"].(bool),
-	}
-
-	hasSecondType := rowDataMap["type2Name"]
-	if hasSecondType != nil {
-		payload.Pokemon.Type2 = rowDataMap["type2Name"].(string)
-	}
-
-	return payload
-}
-
-func indexPspPayload(elasticClient *elasticsearch.TypedClient, payload structs.PspElasticDocument) error {
-	_, err := elasticClient.Index("pokemon_stock_pairs_index").Request(payload).Do(context.Background())
-
-	return err
+func bulkAddFailureCallback(a context.Context, b esutil.BulkIndexerItem, c esutil.BulkIndexerResponseItem, err error) {
+	utils.LogFailureError("Aborting from bulkAddFailureCallback()", err)
 }
 
 func main() {
 	utils.LoadEnvVars("../../.env")
 	conn := utils.ConnectToDb()
 	elasticClient := utils.ConnectToElastic("../../http_ca.crt")
+	elasticRegularClient := utils.CreateRegularElasticClient("../../http_ca.crt")
 
 	count, err := getPspIndexDocCount(elasticClient)
 	if err != nil {
@@ -66,71 +38,83 @@ func main() {
 		utils.LogFailure("Error starting PSP indexing: the index already contains PSPs")
 	}
 
-	query := `
-		SELECT 
-			psp.id AS "pspId",
-			pokemon.id AS "pokemonId",
-			pokemon."name" AS "pokemonName",
-			pokemon.pokedex_number AS "pokedexNumber",
-			pokemon_types1."type" AS "type1Name",
-			pokemon_types2."type" AS "type2Name",
-			stocks.id AS "stockId",
-			stocks.symbol AS "stockSymbol", 
-			stocks."name" AS "stockName",
-			stocks.active AS "stockActive",
-			seasons.active AS "seasonActive"
-		FROM pokemon_stock_pairs AS psp
-		INNER JOIN pokemon ON pokemon.id = psp.pokemon_id
-		INNER JOIN pokemon_types AS pokemon_types1 ON pokemon_types1.id = pokemon.type_1_id
-		LEFT JOIN pokemon_types AS pokemon_types2 ON pokemon_types2.id = pokemon.type_2_id
-		INNER JOIN stocks ON stocks.id = psp.stock_id
-		INNER JOIN seasons ON seasons.id = psp.season_id
-		ORDER BY pokemon.id
-	`
+	query :=
+		`
+			WITH tab1 AS (
+				SELECT
+					pokemon_table.id,
+					pokemon_table.name,
+					pokemon_table.pokedex_number,
+					pokemon_types1.type AS type_1,
+					pokemon_types2.type AS type_2
+				FROM pokemon AS pokemon_table
+				INNER JOIN pokemon_types AS pokemon_types1 ON pokemon_types1.id = pokemon_table.type_1_id
+				LEFT JOIN pokemon_types AS pokemon_types2 ON pokemon_types2.id = pokemon_table.type_2_id
+			),
+			tab2 AS (
+				SELECT 
+					stocks.id,
+					stocks.symbol,
+					stocks.name,
+					stocks.active 
+				FROM stocks
+				INNER JOIN pokemon_stock_pairs AS psp ON psp.stock_id = stocks.id
+				INNER JOIN tab1 ON tab1.id = psp.pokemon_id
+			)
+			SELECT JSON_BUILD_OBJECT(
+				'id', psp.id,
+				'pokemon', tab1.*, 
+				'stock', tab2.*, 
+				'active_season', seasons.active
+			) FROM tab1
+			INNER JOIN pokemon_stock_pairs AS psp ON psp.pokemon_id = tab1.id
+			INNER JOIN tab2 ON psp.stock_id = tab2.id
+			INNER JOIN seasons ON psp.season_id = seasons.id
+			ORDER BY tab1.pokedex_number
+		`
 	rows, err := conn.Query(context.Background(), query)
 	if err != nil {
 		utils.LogFailureError("Error querying PSPs", err)
 	}
 	defer rows.Close()
 
-	var payloads []structs.PspElasticDocument
+	bulkIndexer, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
+		Index:  "pokemon_stock_pairs_index",
+		Client: elasticRegularClient,
+	})
+	if err != nil {
+		utils.LogFailureError("Error creating Elasticsearch bulk inserter", err)
+	}
 
 	for rows.Next() {
-		queriedData, err := pgx.RowToMap(rows)
-		if err != nil {
-			utils.LogFailureError("Error reading individual row", err)
-		}
+		jsonData := string(rows.RawValues()[0])
 
-		payload := convertDbRowToIndexPayload(queriedData)
-		payloads = append(payloads, payload)
+		err = bulkIndexer.Add(context.Background(),
+			esutil.BulkIndexerItem{
+				Action:    "index",
+				Index:     "pokemon_stock_pairs_index",
+				Body:      strings.NewReader(jsonData),
+				OnFailure: bulkAddFailureCallback,
+			},
+		)
+		if err != nil {
+			utils.LogFailureError("Error queuing up bulk insert", err)
+		}
 	}
 
 	if err = rows.Err(); err != nil {
 		utils.LogFailureError("Error reading queried rows", err)
 	}
 
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(payloads))
-	defer close(errChan)
-
-	for _, payload := range payloads {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			err := indexPspPayload(elasticClient, payload)
-			if err != nil {
-				errChan <- err
-			}
-		}()
+	err = bulkIndexer.Close(context.Background())
+	if err != nil {
+		utils.LogFailureError("Error closing bulkIndexer", err)
 	}
 
-	wg.Wait()
-
-	select {
-	case err := <-errChan:
-		utils.LogFailureError("Error indexing PSPs into Elasticsearch", err)
-	default:
-		utils.LogSuccess("Successfully indexed PSPs into Elasticsearch")
+	bulkIndexFailed := bulkIndexer.Stats().NumFailed != 0
+	if bulkIndexFailed {
+		utils.LogFailure("Some PSPs failed to be properly indexed")
 	}
+
+	utils.LogSuccess("Successfully indexed PSPs into Elasticsearch")
 }
