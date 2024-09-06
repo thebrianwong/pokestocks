@@ -53,7 +53,7 @@ func GetSeasonName() string {
 	return seasonName
 }
 
-func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
+func CreateTypedElasticClient(certPath string) *elasticsearch.TypedClient {
 	elasticUsername := os.Getenv("ELASTIC_USERNAME")
 	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
 	// elasticApiKey := os.Getenv("ELASTIC_API_KEY")

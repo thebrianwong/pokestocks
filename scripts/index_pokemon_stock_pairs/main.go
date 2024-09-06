@@ -27,10 +27,10 @@ func bulkAddFailureCallback(a context.Context, b esutil.BulkIndexerItem, c esuti
 func main() {
 	utils.LoadEnvVars("../../.env")
 	conn := utils.ConnectToDb()
-	elasticClient := utils.ConnectToElastic("../../http_ca.crt")
-	elasticRegularClient := utils.CreateRegularElasticClient("../../http_ca.crt")
+	typedElasticClient := utils.CreateTypedElasticClient("../../http_ca.crt")
+	regularElasticClient := utils.CreateRegularElasticClient("../../http_ca.crt")
 
-	count, err := getPspIndexDocCount(elasticClient)
+	count, err := getPspIndexDocCount(typedElasticClient)
 	if err != nil {
 		utils.LogFailureError("Error starting PSP indexing", err)
 	}
@@ -80,7 +80,7 @@ func main() {
 
 	bulkIndexer, err := esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
 		Index:  "pokemon_stock_pairs_index",
-		Client: elasticRegularClient,
+		Client: regularElasticClient,
 	})
 	if err != nil {
 		utils.LogFailureError("Error creating Elasticsearch bulk inserter", err)
