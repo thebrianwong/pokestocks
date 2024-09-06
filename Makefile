@@ -38,3 +38,7 @@ remake_psp_index:
 		go run main.go
 	cd scripts/create_pokemon_stock_pairs_index/; \
 		go run main.go
+
+seed_psp_index:
+	cd scripts/index_pokemon_stock_pairs/; \
+		go run main.go
