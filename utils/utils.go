@@ -58,7 +58,6 @@ func ConnectToElastic(certPath string) *elasticsearch.TypedClient {
 	elasticPassword := os.Getenv("ELASTIC_PASSWORD")
 	// elasticApiKey := os.Getenv("ELASTIC_API_KEY")
 	elasticEndpoint := os.Getenv(("ELASTIC_ENDPOINT"))
-	// cert, err := os.ReadFile("../../http_ca.crt")
 	cert, err := os.ReadFile(certPath)
 	if err != nil {
 		LogFailureError("Error reading Elasticsearch certificate", err)
