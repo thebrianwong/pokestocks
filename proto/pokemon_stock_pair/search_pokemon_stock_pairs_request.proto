@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/pokemon_stock_pair";
+
+package pokemon_stock_pair;
+
+message SearchPokemonStockPairsRequest {
+  string searchValue = 1;
+}
