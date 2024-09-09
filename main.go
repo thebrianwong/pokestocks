@@ -16,6 +16,7 @@ func main() {
 	utils.LoadEnvVars("")
 	port := os.Getenv("GRPC_PORT")
 	conn := utils.ConnectToDb()
+	elasticClient := utils.CreateTypedElasticClient("")
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -23,7 +24,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	psp_pb.RegisterPokemonStockPairServiceServer(s, &psp_service.Server{DB: conn})
+	psp_pb.RegisterPokemonStockPairServiceServer(s, &psp_service.Server{DB: conn, ElasticClient: elasticClient})
 
 	reflection.Register(s)
 
