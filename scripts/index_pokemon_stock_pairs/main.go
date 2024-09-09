@@ -27,8 +27,8 @@ func bulkAddFailureCallback(a context.Context, b esutil.BulkIndexerItem, c esuti
 func main() {
 	utils.LoadEnvVars("../../.env")
 	conn := utils.ConnectToDb()
-	typedElasticClient := utils.CreateTypedElasticClient("../../http_ca.crt")
-	regularElasticClient := utils.CreateRegularElasticClient("../../http_ca.crt")
+	typedElasticClient := utils.CreateTypedElasticClient("../../")
+	regularElasticClient := utils.CreateRegularElasticClient("../../")
 
 	count, err := getPspIndexDocCount(typedElasticClient)
 	if err != nil {

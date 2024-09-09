@@ -10,7 +10,7 @@ import (
 
 func main() {
 	utils.LoadEnvVars("../../.env")
-	elasticClient := utils.CreateTypedElasticClient("../../http_ca.crt")
+	elasticClient := utils.CreateTypedElasticClient("../../")
 
 	three := 3
 	twelve := 12

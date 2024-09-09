@@ -7,7 +7,7 @@ import (
 
 func main() {
 	utils.LoadEnvVars("../../.env")
-	elasticClient := utils.CreateTypedElasticClient("../../http_ca.crt")
+	elasticClient := utils.CreateTypedElasticClient("../../")
 
 	_, err := elasticClient.Indices.Delete("pokemon_stock_pairs_index").Do(context.Background())
 
