@@ -14,7 +14,6 @@ import (
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/jackc/pgx/v5"
@@ -109,10 +108,12 @@ func enrichWithStockPrices(psps []*common_pb.PokemonStockPair) error {
 	}
 }
 
-func searchElasticIndex(elasticClient *elasticsearch.TypedClient, searchValue string) (*search.Response, error) {
+func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error) {
 	two := float32(2.0)
 	three := float32(3.0)
 	fifteen := float32(15.0)
+
+	elasticClient := s.ElasticClient
 
 	pokemonNestedQuery := types.Query{
 		Nested: &types.NestedQuery{
@@ -247,11 +248,10 @@ func extractPokemonStockPairIds(docs []structs.PspElasticDocument) []string {
 
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	db := s.DB
-	elasticClient := s.ElasticClient
 
 	searchValue := in.SearchValue
 
-	searchResults, err := searchElasticIndex(elasticClient, searchValue)
+	searchResults, err := s.searchElasticIndex(searchValue)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error searching data: %v", err)
 	}
