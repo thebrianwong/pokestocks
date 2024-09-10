@@ -61,8 +61,22 @@ func main() {
 							// "created_at":     types.NewDateProperty(),
 							// "updated_at":     types.NewDateProperty(),
 							// "sprite_url":     types.NewKeywordProperty(),
-							"type_1": types.NewKeywordProperty(),
-							"type_2": types.NewKeywordProperty(),
+							"type_1": types.KeywordProperty{
+								Type: "keyword",
+								Fields: map[string]types.Property{
+									"text": types.TextProperty{
+										Type: "text",
+									},
+								},
+							},
+							"type_2": types.KeywordProperty{
+								Type: "keyword",
+								Fields: map[string]types.Property{
+									"text": types.TextProperty{
+										Type: "text",
+									},
+								},
+							},
 							// "type_1": types.NestedProperty{
 							// 	Properties: map[string]types.Property{
 							// 		"id":         types.NewIntegerNumberProperty(),
