@@ -11,6 +11,7 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 	two := float32(2.0)
 	three := float32(3.0)
 	fifteen := float32(15.0)
+	twenty := float32(20.0)
 
 	elasticClient := s.ElasticClient
 
@@ -43,6 +44,14 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 								"pokemon.name": {
 									Value: searchValue,
 									Boost: &three,
+								},
+							},
+						},
+						{
+							Match: map[string]types.MatchQuery{
+								"pokemon.pokedex_number": {
+									Query: searchValue,
+									Boost: &twenty,
 								},
 							},
 						},
