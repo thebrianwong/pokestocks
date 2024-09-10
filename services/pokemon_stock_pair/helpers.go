@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"pokestocks/internal/structs"
-	"sync"
 	"time"
 
 	common_pb "pokestocks/proto/common"
@@ -58,46 +57,26 @@ func convertDbRowToPokemonStockPair(rowDataMap map[string]any) *common_pb.Pokemo
 	return &psp
 }
 
-func getStockPrice(symbol string) (float64, error) {
-	client := marketdata.NewClient(marketdata.ClientOpts{})
-
-	requestParams := marketdata.GetLatestTradeRequest{}
-
-	data, err := client.GetLatestTrade(symbol, requestParams)
-	if err != nil {
-		return 0, err
-	}
-
-	stockPrice := data.Price
-	return stockPrice, nil
-}
-
 func enrichWithStockPrices(psps []*common_pb.PokemonStockPair) error {
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(psps))
-	defer close(errChan)
+	symbols := []string{}
 
 	for _, psp := range psps {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			stockPrice, err := getStockPrice(psp.Stock.Symbol)
-			if err != nil {
-				errChan <- err
-			}
-			psp.Stock.Price = &stockPrice
-		}()
+		symbols = append(symbols, psp.Stock.Symbol)
 	}
 
-	wg.Wait()
-
-	select {
-	case err := <-errChan:
+	client := marketdata.NewClient(marketdata.ClientOpts{})
+	requestParams := marketdata.GetLatestTradeRequest{}
+	data, err := client.GetLatestTrades(symbols, requestParams)
+	if err != nil {
 		return err
-	default:
-		return nil
 	}
+
+	for _, psp := range psps {
+		priceData := data[psp.Stock.Symbol]
+		psp.Stock.Price = &priceData.Price
+	}
+
+	return nil
 }
 
 func convertPokemonStockPairElasticDocuments(elasticResponse *search.Response) ([]structs.PspElasticDocument, error) {
