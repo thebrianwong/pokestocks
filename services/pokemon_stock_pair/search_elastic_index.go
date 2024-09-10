@@ -2,6 +2,7 @@ package pokemon_stock_pair
 
 import (
 	"context"
+	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -115,6 +116,14 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 								"stock.name.full_name": {
 									Value: searchValue,
 									Boost: &fifteen,
+								},
+							},
+						},
+						{
+							Match: map[string]types.MatchQuery{
+								"stock.symbol": {
+									Query: strings.ToUpper(searchValue),
+									Boost: &twenty,
 								},
 							},
 						},
