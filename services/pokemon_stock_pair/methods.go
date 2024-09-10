@@ -158,6 +158,15 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 		return nil, status.Errorf(codes.Internal, "error reading queried data: %v", err)
 	}
 
+	err = enrichWithStockPrices(psps)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
+
+	}
+	return &psp_pb.GetPokemonStockPairResponse{Data: psps}, nil
+}
+
+func enrichWithStockPrices(psps []*common_pb.PokemonStockPair) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(psps))
 	defer close(errChan)
@@ -179,9 +188,9 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 
 	select {
 	case err := <-errChan:
-		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
+		return err
 	default:
-		return &psp_pb.GetPokemonStockPairResponse{Data: psps}, nil
+		return nil
 	}
 }
 
@@ -412,29 +421,10 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		return nil, status.Errorf(codes.Internal, "error reading queried data: %v", err)
 	}
 
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(psps))
-	defer close(errChan)
-
-	for _, psp := range psps {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			stockPrice, err := getStockPrice(psp.Stock.Symbol)
-			if err != nil {
-				errChan <- err
-			}
-			psp.Stock.Price = &stockPrice
-		}()
-	}
-
-	wg.Wait()
-
-	select {
-	case err := <-errChan:
+	err = enrichWithStockPrices(psps)
+	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
-	default:
-		return &psp_pb.SearchPokemonStockPairsResponse{Data: psps}, nil
+
 	}
+	return &psp_pb.SearchPokemonStockPairsResponse{Data: psps}, nil
 }
