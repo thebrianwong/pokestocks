@@ -10,6 +10,7 @@ import (
 func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error) {
 	two := float32(2.0)
 	three := float32(3.0)
+	sevenPointFive := float32(7.5)
 	fifteen := float32(15.0)
 	twenty := float32(20.0)
 
@@ -52,6 +53,22 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 								"pokemon.pokedex_number": {
 									Query: searchValue,
 									Boost: &twenty,
+								},
+							},
+						},
+						{
+							Match: map[string]types.MatchQuery{
+								"pokemon.type_1.text": {
+									Query: searchValue,
+									Boost: &sevenPointFive,
+								},
+							},
+						},
+						{
+							Match: map[string]types.MatchQuery{
+								"pokemon.type_2.text": {
+									Query: searchValue,
+									Boost: &sevenPointFive,
 								},
 							},
 						},
