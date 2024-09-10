@@ -133,6 +133,27 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 		},
 	}
 
+	activeStockFilter := types.Query{
+		Nested: &types.NestedQuery{
+			Path: "stock",
+			Query: &types.Query{
+				Term: map[string]types.TermQuery{
+					"stock.active": {
+						Value: true,
+					},
+				},
+			},
+		},
+	}
+
+	activeSeasonFilter := types.Query{
+		Term: map[string]types.TermQuery{
+			"active_season": {
+				Value: true,
+			},
+		},
+	}
+
 	res, err := elasticClient.Search().Index("pokemon_stock_pairs_index").Request(
 		&search.Request{
 			Query: &types.Query{
@@ -140,6 +161,10 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 					Should: []types.Query{
 						pokemonNestedQuery,
 						stockNestedQuery,
+					},
+					Must: []types.Query{
+						activeStockFilter,
+						activeSeasonFilter,
 					},
 				},
 			},
