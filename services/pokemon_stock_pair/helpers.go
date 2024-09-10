@@ -8,7 +8,6 @@ import (
 
 	common_pb "pokestocks/proto/common"
 
-	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -55,28 +54,6 @@ func convertDbRowToPokemonStockPair(rowDataMap map[string]any) *common_pb.Pokemo
 	}
 
 	return &psp
-}
-
-func enrichWithStockPrices(psps []*common_pb.PokemonStockPair) error {
-	symbols := []string{}
-
-	for _, psp := range psps {
-		symbols = append(symbols, psp.Stock.Symbol)
-	}
-
-	client := marketdata.NewClient(marketdata.ClientOpts{})
-	requestParams := marketdata.GetLatestTradeRequest{}
-	data, err := client.GetLatestTrades(symbols, requestParams)
-	if err != nil {
-		return err
-	}
-
-	for _, psp := range psps {
-		priceData := data[psp.Stock.Symbol]
-		psp.Stock.Price = &priceData.Price
-	}
-
-	return nil
 }
 
 func convertPokemonStockPairElasticDocuments(elasticResponse *search.Response) ([]structs.PspElasticDocument, error) {

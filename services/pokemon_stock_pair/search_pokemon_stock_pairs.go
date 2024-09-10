@@ -102,7 +102,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		return nil, status.Errorf(codes.Internal, "error reading queried data: %v", err)
 	}
 
-	err = enrichWithStockPrices(psps)
+	err = s.enrichWithStockPrices(psps)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 

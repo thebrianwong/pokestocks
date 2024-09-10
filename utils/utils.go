@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -111,6 +112,11 @@ func CreateRegularElasticClient(certPath string) *elasticsearch.Client {
 	}
 
 	return elasticClient
+}
+
+func CreateAlpacaClient() *marketdata.Client {
+	alpacaClient := marketdata.NewClient(marketdata.ClientOpts{})
+	return alpacaClient
 }
 
 func LogFailureError(message string, err error) {
