@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 50052:50052
+    volumes:
+      - type: bind
+        source: ./.env
+        target: /usr/src/app/.env
