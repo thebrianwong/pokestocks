@@ -1,8 +1,10 @@
 services:
-  app:
+  pokestocks:
     build:
       context: .
       dockerfile: Dockerfile
+    hostname: pokestocks
+    container_name: pokestocks
     ports:
       - 50052:50052
     volumes:
