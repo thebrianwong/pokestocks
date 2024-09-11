@@ -27,6 +27,9 @@ seed_db:
 	cd scripts/random_mapping/; \
 		go run main.go ${seasonName}
 
+compose: migrate_up seed_db
+	./main
+
 .PHONY: proto
 proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
