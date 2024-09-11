@@ -11,3 +11,37 @@ services:
       - type: bind
         source: ./.env
         target: /usr/src/app/.env
+    depends_on:
+      pg:
+        condition: service_healthy
+    networks:
+      - app-layer
+    command: make compose
+  pg:
+    image: postgres:16
+    hostname: pg
+    container_name: pg
+    ports:
+      - 5432:5432
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_NAME}
+    volumes:
+      - pgVolume:/var/lib/postgresql/data
+    networks:
+      - app-layer
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${PG_USER} -d ${PG_NAME}'"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  pgVolume:
+
+networks:
+  app-layer:
+  data:
