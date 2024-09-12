@@ -27,7 +27,7 @@ seed_db:
 	cd scripts/random_mapping/; \
 		go run main.go ${seasonName}
 
-compose: migrate_up seed_db
+compose: migrate_up seed_db remake_psp_index seed_psp_index
 	./main
 
 .PHONY: proto
