@@ -10,6 +10,7 @@ services:
       - type: bind
         source: ./.env
         target: /usr/src/app/.env
+      - certs:/usr/src/app
     depends_on:
       pg:
         condition: service_healthy
@@ -18,7 +19,22 @@ services:
     networks:
       - app
       - infra
-    command: make compose
+    command: >
+      bash -c '
+        if [ ! -f http_ca.crt ]; then
+          echo "Copying certificate to app directory";
+          cp elastic/elastic.crt -d ./http_ca.crt;
+          # echo "Certificate copy successful"
+        fi;
+        if ! [[ $(stat -c "%a" main) =~ "751" ]]; then
+          echo "Adding missing executable permissions to main";
+          chmod a+x main;
+          # echo "Executable permissions added to main";
+        fi;
+        echo "Running make compose";
+        # sleep infinity;
+        make compose;
+      '
 
   pg:
     image: postgres:16
