@@ -28,7 +28,7 @@ seed_db:
 		go run main.go ${seasonName}
 
 compose: migrate_up seed_db remake_psp_index seed_psp_index
-	./main
+	air
 
 .PHONY: proto
 proto:
