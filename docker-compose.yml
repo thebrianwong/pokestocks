@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    hostname: pokestocks
     container_name: pokestocks
     ports:
       - 50052:50052
@@ -24,7 +23,7 @@ services:
   pg:
     image: postgres:16
     hostname: pg
-    container_name: pg
+    container_name: psPg
     ports:
       - 5432:5432
     env_file: ./.env
@@ -94,6 +93,7 @@ services:
       retries: 120
 
   elastic:
+    container_name: psElastic
     depends_on:
       setup:
         condition: service_healthy
@@ -133,6 +133,7 @@ services:
       retries: 120
 
   kibana:
+    container_name: psKibana
     depends_on:
       elastic:
         condition: service_healthy
