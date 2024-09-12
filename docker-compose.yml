@@ -17,7 +17,8 @@ services:
       elastic:
         condition: service_healthy
     networks:
-      - app-layer
+      - app
+      - infra
     command: make compose
 
   pg:
@@ -34,8 +35,7 @@ services:
     volumes:
       - pgVolume:/var/lib/postgresql/data
     networks:
-      - app-layer
-      - data
+      - infra
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U ${PG_USER} -d ${PG_NAME}'"]
       interval: 10s
@@ -85,6 +85,8 @@ services:
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://elastic:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
         echo "All done!";
       '
+    networks:
+      - infra
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/elastic/elastic.crt ]"]
       interval: 1s
@@ -118,6 +120,8 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=basic
+    networks:
+      - infra
     healthcheck:
       test:
         [
@@ -144,6 +148,9 @@ services:
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
+    networks:
+      - app
+      - infra
     healthcheck:
       test:
         [
@@ -161,5 +168,5 @@ volumes:
   kibanaData:
 
 networks:
-  app-layer:
-  data:
+  app:
+  infra:
