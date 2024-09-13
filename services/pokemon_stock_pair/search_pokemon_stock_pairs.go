@@ -5,6 +5,7 @@ import (
 	"fmt"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
+	"pokestocks/redis"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -14,20 +15,42 @@ import (
 
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	db := s.DB
+	redisClient := s.RedisClient
 
 	searchValue := in.SearchValue
 
-	searchResults, err := s.searchElasticIndex(searchValue)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error searching data: %v", err)
-	}
+	var ids []string
 
-	elasticPsps, err := convertPokemonStockPairElasticDocuments(searchResults)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error formatting data: %v", err)
-	}
+	elasticKeyInstances, _ := redisClient.Exists(ctx, redis.ElasticCacheKey(searchValue)).Result()
+	if elasticKeyInstances == 1 {
+		cachedIds, err := redisClient.SMembers(ctx, redis.ElasticCacheKey(searchValue)).Result()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error querying Redis for key %v: %v", redis.ElasticCacheKey(searchValue), err)
+		}
 
-	ids := extractPokemonStockPairIds(elasticPsps)
+		ids = cachedIds
+	} else {
+		searchResults, err := s.searchElasticIndex(searchValue)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error searching Elastic data: %v", err)
+		}
+
+		elasticPsps, err := convertPokemonStockPairElasticDocuments(searchResults)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error formatting Elastic data: %v", err)
+		}
+
+		ids = extractPokemonStockPairIds(elasticPsps)
+
+		redisPipeline := redisClient.Pipeline()
+		redisPipeline.SAdd(ctx, redis.ElasticCacheKey(searchValue), ids)
+		redisPipeline.Expire(ctx, redis.ElasticCacheKey(searchValue), time.Second*10)
+
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error adding Redis data for key %v: %v", redis.ElasticCacheKey(searchValue), err)
+		}
+	}
 
 	if len(ids) == 0 {
 		return &psp_pb.SearchPokemonStockPairsResponse{Data: nil}, nil
