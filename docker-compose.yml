@@ -186,11 +186,31 @@ services:
       timeout: 10s
       retries: 120
 
+  redis:
+    container_name: psRedis
+    image: redis/redis-stack:7.4.0-v0
+    volumes:
+      - redisData:/data
+    ports:
+      - 6379:6379
+      - 8001:8001
+    environment:
+      - REDIS_ARGS=--requirepass ${REDIS_PASSWORD}
+    networks:
+      - app
+      - infra
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
 volumes:
   pgVolume:
   certs:
   elasticData:
   kibanaData:
+  redisData:
 
 networks:
   app:
