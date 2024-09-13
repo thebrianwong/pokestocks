@@ -9,6 +9,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -117,6 +118,18 @@ func CreateRegularElasticClient(certPath string) *elasticsearch.Client {
 func CreateAlpacaClient() *marketdata.Client {
 	alpacaClient := marketdata.NewClient(marketdata.ClientOpts{})
 	return alpacaClient
+}
+
+func CreateRedisClient() *redis.Client {
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       0,
+	})
+
+	return redisClient
 }
 
 func LogFailureError(message string, err error) {
