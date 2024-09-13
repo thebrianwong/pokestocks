@@ -3,3 +3,5 @@
 *.crt
 .air.toml
 /tmp
+Dockerfile
+docker-compose.yml
