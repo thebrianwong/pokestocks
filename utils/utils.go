@@ -129,6 +129,12 @@ func CreateRedisClient() *redis.Client {
 		DB:       0,
 	})
 
+	res, err := redisClient.Ping(context.Background()).Result()
+
+	if !(res == "PONG" && err == nil) {
+		LogFailureError("Error creating Redis client", err)
+	}
+
 	return redisClient
 }
 
