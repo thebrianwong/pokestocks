@@ -162,7 +162,7 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 						pokemonNestedQuery,
 						stockNestedQuery,
 					},
-					Must: []types.Query{
+					Filter: []types.Query{
 						activeStockFilter,
 						activeSeasonFilter,
 					},
