@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	Red   = "\033[31m"
-	Green = "\033[32m"
-	Cyan  = "\033[36m"
-	Reset = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Yellow = "\033[33m"
+	Cyan   = "\033[36m"
+	Reset  = "\033[0m"
 )
 
 func LoadEnvVars(path string) {
@@ -148,4 +149,8 @@ func LogFailure(message string) {
 
 func LogSuccess(message string) {
 	log.Println(Green + message + Reset)
+}
+
+func LogWarning(message string) {
+	log.Println(Yellow + message)
 }
