@@ -9,6 +9,7 @@ import (
 )
 
 func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error) {
+	zeroPointOne := types.Float64(0.1)
 	two := float32(2.0)
 	three := float32(3.0)
 	sevenPointFive := float32(7.5)
@@ -156,6 +157,7 @@ func (s *Server) searchElasticIndex(searchValue string) (*search.Response, error
 
 	res, err := elasticClient.Search().Index("pokemon_stock_pairs_index").Request(
 		&search.Request{
+			MinScore: &zeroPointOne,
 			Query: &types.Query{
 				Bool: &types.BoolQuery{
 					Should: []types.Query{
