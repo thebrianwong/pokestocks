@@ -5,7 +5,7 @@ import (
 	"fmt"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
-	"pokestocks/redis"
+	redis_keys "pokestocks/redis"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
