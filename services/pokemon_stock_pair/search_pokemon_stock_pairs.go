@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	redis_keys "pokestocks/redis"
@@ -17,6 +20,73 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+type Clock struct {
+	Timestamp time.Time `json:"timestamp"`
+	IsOpen    bool      `json:"is_open"`
+	NextOpen  time.Time `json:"next_open"`
+	NextClose time.Time `json:"next_close"`
+}
+
+func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
+	alpacaBaseUrl := os.Getenv("ALPACA_BROKER_BASE_URL")
+	alpacaOAuth := os.Getenv("ALPACA_BROKER_OAUTH")
+
+	redisClient := s.RedisClient
+	redisPipeline := redisClient.Pipeline()
+
+	cachedMarketStatus, err := redisClient.Get(ctx, redis_keys.MarketStatusKey()).Result()
+	if err == nil {
+		return cachedMarketStatus == "open", nil
+	} else {
+		url := fmt.Sprintf("%s/%s/clock", alpacaBaseUrl, "v1")
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return false, err
+		}
+
+		req.Header.Add("accept", "application/json")
+		req.Header.Add("authorization", fmt.Sprintf("Basic %s", alpacaOAuth))
+
+		var clock Clock
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return false, err
+		} else {
+			defer res.Body.Close()
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				return false, err
+			}
+
+			err = json.Unmarshal(body, &clock)
+			if err != nil {
+				return false, err
+			}
+		}
+
+		marketIsOpen := clock.IsOpen
+		if marketIsOpen {
+			marketCloseTime := clock.NextClose
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "open", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketCloseTime)
+		} else {
+			marketOpenTime := clock.NextOpen
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "close", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketOpenTime)
+		}
+
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			utils.LogWarning(fmt.Sprintf("Error caching market status: %v", err))
+		}
+
+		return marketIsOpen, nil
+	}
+}
 
 func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
 	// preparingDbQuery := time.Now()
