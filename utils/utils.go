@@ -130,9 +130,13 @@ func CreateAlpacaMarketDataClient() *marketdata.Client {
 func CreateAlpacaBrokerClient() *alpaca.Client {
 	key := os.Getenv("ALPACA_BROKER_KEY_ID")
 	secret := os.Getenv("ALPACA_BROKER_SECRET_KEY")
+	oAuth := os.Getenv("ALPACA_BROKER_OAUTH")
+	baseUrl := os.Getenv("ALPACA_BROKER_BASE_URL")
 	alpacaClient := alpaca.NewClient(alpaca.ClientOpts{
 		APIKey:    key,
 		APISecret: secret,
+		OAuth:     oAuth,
+		BaseURL:   baseUrl,
 	})
 	return alpacaClient
 }
