@@ -17,3 +17,7 @@ func DbCacheKey(id string) string {
 func GetIdFromDbCacheKey(key string) string {
 	return strings.Split(key, "#")[1]
 }
+
+func MarketStatusKey() string {
+	return keyPrefix + "#marketStatus"
+}
