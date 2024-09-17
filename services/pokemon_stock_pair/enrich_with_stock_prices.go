@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) enrichWithStockPrices(psps []*common_pb.PokemonStockPair) error {
-	alpacaClient := s.AlpacaClient
+	alpacaClient := s.AlpacaMarketDataClient
 
 	symbols := []string{}
 
