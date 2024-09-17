@@ -116,8 +116,13 @@ func CreateRegularElasticClient(certPath string) *elasticsearch.Client {
 	return elasticClient
 }
 
-func CreateAlpacaClient() *marketdata.Client {
-	alpacaClient := marketdata.NewClient(marketdata.ClientOpts{})
+func CreateAlpacaMarketDataClient() *marketdata.Client {
+	key := os.Getenv("ALPACA_TRADING_KEY_ID")
+	secret := os.Getenv("ALPACA_TRADING_SECRET_KEY")
+	alpacaClient := marketdata.NewClient(marketdata.ClientOpts{
+		APIKey:    key,
+		APISecret: secret,
+	})
 	return alpacaClient
 }
 

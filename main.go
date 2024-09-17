@@ -17,7 +17,7 @@ func main() {
 	port := os.Getenv("GRPC_PORT")
 	conn := utils.ConnectToDb()
 	elasticClient := utils.CreateTypedElasticClient("")
-	alpacaClient := utils.CreateAlpacaClient()
+	alpacaMarketDataClient := utils.CreateAlpacaMarketDataClient()
 	redisClient := utils.CreateRedisClient()
 
 	lis, err := net.Listen("tcp", ":"+port)
@@ -29,10 +29,10 @@ func main() {
 	psp_pb.RegisterPokemonStockPairServiceServer(
 		s,
 		&psp_service.Server{
-			DB:            conn,
-			ElasticClient: elasticClient,
-			AlpacaClient:  alpacaClient,
-			RedisClient:   redisClient,
+			DB:                     conn,
+			ElasticClient:          elasticClient,
+			AlpacaMarketDataClient: alpacaMarketDataClient,
+			RedisClient:            redisClient,
 		},
 	)
 

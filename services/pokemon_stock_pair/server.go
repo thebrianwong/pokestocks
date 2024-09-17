@@ -11,8 +11,8 @@ import (
 
 type Server struct {
 	pb.UnimplementedPokemonStockPairServiceServer
-	DB            *pgxpool.Pool
-	ElasticClient *elasticsearch.TypedClient
-	AlpacaClient  *marketdata.Client
-	RedisClient   *redis.Client
+	DB                     *pgxpool.Pool
+	ElasticClient          *elasticsearch.TypedClient
+	AlpacaMarketDataClient *marketdata.Client
+	RedisClient            *redis.Client
 }
