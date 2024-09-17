@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -120,6 +121,16 @@ func CreateAlpacaMarketDataClient() *marketdata.Client {
 	key := os.Getenv("ALPACA_TRADING_KEY_ID")
 	secret := os.Getenv("ALPACA_TRADING_SECRET_KEY")
 	alpacaClient := marketdata.NewClient(marketdata.ClientOpts{
+		APIKey:    key,
+		APISecret: secret,
+	})
+	return alpacaClient
+}
+
+func CreateAlpacaBrokerClient() *alpaca.Client {
+	key := os.Getenv("ALPACA_BROKER_KEY_ID")
+	secret := os.Getenv("ALPACA_BROKER_SECRET_KEY")
+	alpacaClient := alpaca.NewClient(alpaca.ClientOpts{
 		APIKey:    key,
 		APISecret: secret,
 	})

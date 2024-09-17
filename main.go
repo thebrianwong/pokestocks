@@ -18,6 +18,7 @@ func main() {
 	conn := utils.ConnectToDb()
 	elasticClient := utils.CreateTypedElasticClient("")
 	alpacaMarketDataClient := utils.CreateAlpacaMarketDataClient()
+	alpacaBrokerClient := utils.CreateAlpacaBrokerClient()
 	redisClient := utils.CreateRedisClient()
 
 	lis, err := net.Listen("tcp", ":"+port)
@@ -32,6 +33,7 @@ func main() {
 			DB:                     conn,
 			ElasticClient:          elasticClient,
 			AlpacaMarketDataClient: alpacaMarketDataClient,
+			AlpacaBrokerClient:     alpacaBrokerClient,
 			RedisClient:            redisClient,
 		},
 	)
