@@ -21,3 +21,11 @@ func GetIdFromDbCacheKey(key string) string {
 func MarketStatusKey() string {
 	return keyPrefix + "#marketStatus"
 }
+
+func StockSymbolKey(symbol string) string {
+	return keyPrefix + ":stockPrice#" + symbol
+}
+
+func GetSymbolFromStockSymbolKey(key string) string {
+	return strings.Split(key, "#")[1]
+}
