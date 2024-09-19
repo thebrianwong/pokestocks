@@ -18,13 +18,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Clock struct {
-	Timestamp time.Time `json:"timestamp"`
-	IsOpen    bool      `json:"is_open"`
-	NextOpen  time.Time `json:"next_open"`
-	NextClose time.Time `json:"next_close"`
-}
-
 func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
 	// preparingDbQuery := time.Now()
 
