@@ -67,6 +67,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 	}
 
 	nonCachedData := map[string]marketdata.Trade{}
+	var nextMarketOpen time.Time
 
 	// skip querying Alpaca if there are no cache misses
 	if len(symbols) > 0 {
@@ -77,13 +78,42 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		if err != nil {
 			return err
 		}
+
+		cachedMarketOpen, err := redisClient.Get(ctx, redis_keys.NextMarketOpenKey()).Result()
+		if err != nil {
+			utils.LogWarning(fmt.Sprintf("Error checking next market open in redis: %v", err))
+		}
+
+		if cachedMarketOpen == "" {
+			clock, err := getAlpacaClock(alpacaTradingClient)
+			if err != nil {
+				utils.LogWarning(fmt.Sprintf("Error getting Alpaca clock for next market open. Defaulting to 3 hours: %v", err))
+				nextMarketOpen = time.Now().Add(time.Hour * 3)
+			} else {
+				nextMarketOpen = clock.NextOpen
+				redisPipeline.Set(ctx, redis_keys.NextMarketOpenKey(), nextMarketOpen, 0)
+				redisPipeline.ExpireAt(ctx, redis_keys.NextMarketOpenKey(), nextMarketOpen)
+
+				_, err = redisPipeline.Exec(ctx)
+				if err != nil {
+					utils.LogWarning(fmt.Sprintf("Error caching next market open: %v", err))
+				}
+			}
+		} else {
+			nextMarketOpen, err = time.Parse("2006-01-02T15:04:05-07:00", cachedMarketOpen)
+			if err != nil {
+				utils.LogWarning(fmt.Sprintf("Error parsing date string to time.Time. Defaulting to 3 hours: %v", err))
+				nextMarketOpen = time.Now().Add(time.Hour * 3)
+			}
+		}
 	}
 
 	for _, psp := range psps {
 		priceData, ok := nonCachedData[psp.Stock.Symbol]
 		if ok {
 			psp.Stock.Price = &priceData.Price
-			redisPipeline.Set(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), priceData.Price, time.Second*20)
+			redisPipeline.Set(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), priceData.Price, 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), nextMarketOpen)
 		} else {
 			psp.Stock.Price = cachedSymbolsMap[psp.Stock.Symbol]
 		}
