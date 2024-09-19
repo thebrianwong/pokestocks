@@ -9,7 +9,6 @@ import (
 	redis_keys "pokestocks/redis"
 	"pokestocks/utils"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
@@ -18,8 +17,6 @@ import (
 )
 
 func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
-	// preparingDbQuery := time.Now()
-
 	db := s.DB
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
@@ -41,18 +38,11 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 	query += fmt.Sprintf("WHERE psp.id IN (%s)", positionalParamsString)
 	query += fmt.Sprintf("ORDER BY POSITION(psp.id::text IN $%d)", len(positionalParams)+1)
 
-	// fmt.Println("preparingDbQuery took:", time.Since(preparingDbQuery))
-
-	// queryingDb := time.Now()
 	rows, err := db.Query(ctx, query, queryArgs...)
-	// fmt.Println("queryingDb took:", time.Since(queryingDb))
-
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	// processingDbQuery := time.Now()
 
 	var psps []*common_pb.PokemonStockPair
 	midnightTomorrow := midnightTomorrow()
@@ -74,15 +64,10 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 		redisPipeline.ExpireAt(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), midnightTomorrow)
 	}
 
-	// savingDbKeys := time.Now()
 	_, err = redisPipeline.Exec(ctx)
-	// fmt.Println("savingDbKeys:", time.Since(savingDbKeys))
-
 	if err != nil {
 		utils.LogWarningError("Error caching PSP JSON to Redis", err)
 	}
-
-	// fmt.Println("processingDbQuery took:", time.Since(processingDbQuery))
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -101,10 +86,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 
 	var pspIds []string
 
-	// checkingForCachedElastic := time.Now()
 	cachedElasticIds, err := redisClient.ZRange(ctx, redis_keys.ElasticCacheKey(searchValue), 0, -1).Result()
-	// fmt.Println("checkingForCachedElastic:", time.Since(checkingForCachedElastic))
-
 	if err == nil && len(cachedElasticIds) != 0 {
 		pspIds = cachedElasticIds
 	} else {
@@ -113,9 +95,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 			// we can always just fallback to searching Elastic
 			utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached PSP ids. Falling back to Elastic", err)
 		}
-		// searchingElastic := time.Now()
 		searchResults, err := s.searchElasticIndex(searchValue)
-		// fmt.Println("searchingElastic:", time.Since(searchingElastic))
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error searching Elastic data: %v", err)
 		}
@@ -143,9 +123,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		redisPipeline.ZAdd(ctx, redis_keys.ElasticCacheKey(searchValue), sortedSet...)
 		redisPipeline.ExpireAt(ctx, redis_keys.ElasticCacheKey(searchValue), midnightTomorrow)
 
-		// savingElasticKeys := time.Now()
 		_, err = redisPipeline.Exec(ctx)
-		// fmt.Println("savingElasticKeys:", time.Since(savingElasticKeys))
 		if err != nil {
 			// don't return a gRPC response with an error
 			// a response with data can still be generated even if we can't cache Elasticsearch results
@@ -160,13 +138,12 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 	for _, id := range pspIds {
 		redisPipeline.JSONGet(ctx, redis_keys.DbCacheKey(id)).Result()
 	}
-	// gettingJson := time.Now()
+
 	// if this returns an error, the following loop will not run,
 	// resulting in the cachedIds and nonCachedIds to be empty slices
 	// and the first condition of the if-else being true
 	// therefore, there is no need to do a direct error check here
 	results, _ := redisPipeline.Exec(ctx)
-	// fmt.Println("gettingJson:", time.Since(gettingJson))
 
 	for _, result := range results {
 		jsonString := result.(*redis.JSONCmd).Val()
@@ -220,14 +197,11 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		}
 	}
 
-	// gettingStockPrices := time.Now()
-
 	err = s.enrichWithStockPrices(ctx, psps)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 	}
 
-	// fmt.Println("gettingStockPrices took:", time.Since(gettingStockPrices))
 	// fmt.Println("startSearchPokemonStockPairs took:", time.Since(startSearchPokemonStockPairs))
 	// fmt.Println("======")
 
