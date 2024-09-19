@@ -146,7 +146,7 @@ func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 	} else {
 		clock, err := s.getAlpacaClock()
 		if err != nil {
-			utils.LogWarningError("Error hitting Alpaca clock API", err)
+			utils.LogWarningError("Error calling Alpaca clock API", err)
 			return false, err
 		}
 
@@ -163,7 +163,7 @@ func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 
 		_, err = redisPipeline.Exec(ctx)
 		if err != nil {
-			utils.LogWarningError("Error caching market status", err)
+			utils.LogWarningError("Error caching market status to Redis", err)
 		}
 
 		return marketIsOpen, nil

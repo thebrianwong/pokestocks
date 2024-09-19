@@ -61,7 +61,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 			symbols = nonCachedSymbolsArr
 		} else {
-			utils.LogWarningError("Error checking if cached data exists. Falling back to hitting the Alpaca API for all stock prices", err)
+			utils.LogWarningError("Error checking if cached stock prices exists. Falling back to retrieving data from Alpaca", err)
 		}
 	}
 
@@ -81,7 +81,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 		cachedMarketOpen, err := redisClient.Get(ctx, redis_keys.NextMarketOpenKey()).Result()
 		if err != nil && err != redis.Nil {
-			utils.LogWarningError("Error checking next market open in redis", err)
+			utils.LogWarningError("Error checking Redis for next market open", err)
 		}
 
 		if cachedMarketOpen == "" {
@@ -96,7 +96,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 				_, err = redisPipeline.Exec(ctx)
 				if err != nil {
-					utils.LogWarningError("Error caching next market open", err)
+					utils.LogWarningError("Error caching next market open to Redis", err)
 				}
 			}
 		} else {
@@ -124,7 +124,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 	if !marketIsOpen {
 		_, err = redisPipeline.Exec(ctx)
 		if err != nil {
-			utils.LogWarning("Error caching stock prices")
+			utils.LogWarning("Error caching stock prices to Redis")
 		}
 	}
 

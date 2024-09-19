@@ -80,7 +80,7 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 	// fmt.Println("savingDbKeys:", time.Since(savingDbKeys))
 
 	if err != nil {
-		log.Printf("Error inserting PSP JSON into Redis: %v", err)
+		utils.LogWarningError("Error caching PSP JSON to Redis", err)
 	}
 
 	// fmt.Println("processingDbQuery took:", time.Since(processingDbQuery))
@@ -153,7 +153,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		if err != nil {
 			// don't return a gRPC response with an error
 			// a response with data can still be generated even if we can't cache Elasticsearch results
-			utils.LogWarningError("Error saving data to Redis for key "+redis_keys.ElasticCacheKey(searchValue)+". Skipping", err)
+			utils.LogWarningError("Error caching data to Redis for key "+redis_keys.ElasticCacheKey(searchValue)+". Skipping", err)
 		}
 	}
 
