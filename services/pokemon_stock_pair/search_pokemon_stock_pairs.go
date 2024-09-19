@@ -140,31 +140,28 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		redisPipeline.JSONGet(ctx, redis_keys.DbCacheKey(id)).Result()
 	}
 
-	// if this returns an error, the following loop will not run,
-	// resulting in the cachedIds and nonCachedIds to be empty slices
-	// and the first condition of the if-else being true
-	// therefore, there is no need to do a direct error check here
-	results, _ := redisPipeline.Exec(ctx)
+	results, err := redisPipeline.Exec(ctx)
+	if err == nil {
+		for _, result := range results {
+			jsonString := result.(*redis.JSONCmd).Val()
+			key := result.(*redis.JSONCmd).Args()[1]
+			id := redis_keys.GetIdFromDbCacheKey(key.(string))
+			if jsonString == "" {
+				nonCachedIds = append(nonCachedIds, id)
+			} else {
+				cachedIds = append(cachedIds, id)
 
-	for _, result := range results {
-		jsonString := result.(*redis.JSONCmd).Val()
-		key := result.(*redis.JSONCmd).Args()[1]
-		id := redis_keys.GetIdFromDbCacheKey(key.(string))
-		if jsonString == "" {
-			nonCachedIds = append(nonCachedIds, id)
-		} else {
-			cachedIds = append(cachedIds, id)
-
-			var psp common_pb.PokemonStockPair
-			json.Unmarshal([]byte(jsonString), &psp)
-			cachedPspsMap[id] = &psp
+				var psp common_pb.PokemonStockPair
+				json.Unmarshal([]byte(jsonString), &psp)
+				cachedPspsMap[id] = &psp
+			}
 		}
 	}
 
 	var psps []*common_pb.PokemonStockPair
 
 	if len(cachedIds) == 0 && len(nonCachedIds) == 0 {
-		// something wrong with Redis and need to query db for all ids
+		// the above loop on results never occurred so the id arrays are both empty
 		utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached JSON. Falling back to Elastic", err)
 		psps, err = s.queryDbForPokemonStockPairs(ctx, pspIds)
 		if err != nil {
@@ -172,7 +169,6 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		}
 	} else if len(nonCachedIds) > 0 {
 		// 1 or more cache misses require querying db
-
 		nonCachedPspsArr, err := s.queryDbForPokemonStockPairs(ctx, nonCachedIds)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error querying data from db: %v", err)
