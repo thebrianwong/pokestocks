@@ -28,12 +28,13 @@ type Clock struct {
 func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
+	alpacaTradingClient := s.AlpacaTradingClient
 
 	cachedMarketStatus, err := redisClient.Get(ctx, redis_keys.MarketStatusKey()).Result()
 	if err == nil {
 		return cachedMarketStatus == "open", nil
 	} else {
-		clock, err := getAlpacaClock()
+		clock, err := getAlpacaClock(alpacaTradingClient)
 		if err != nil {
 			utils.LogWarning(fmt.Sprintf("Error hitting Alpaca clock API: %v", err))
 			return false, err

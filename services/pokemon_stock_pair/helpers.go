@@ -3,14 +3,12 @@ package pokemon_stock_pair
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"pokestocks/internal/structs"
 	"time"
 
 	common_pb "pokestocks/proto/common"
 
+	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -87,38 +85,10 @@ func extractPokemonStockPairIds(docs []structs.PspElasticDocument) []string {
 	return ids
 }
 
-func getAlpacaClock() (*Clock, error) {
-	alpacaBaseUrl := os.Getenv("ALPACA_BROKER_BASE_URL")
-	alpacaOAuth := os.Getenv("ALPACA_BROKER_OAUTH")
-
-	url := fmt.Sprintf("%s/%s/clock", alpacaBaseUrl, "v1")
-
-	req, err := http.NewRequest("GET", url, nil)
+func getAlpacaClock(alpacaTradingClient *alpaca.Client) (*alpaca.Clock, error) {
+	clock, err := alpacaTradingClient.GetClock()
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("authorization", fmt.Sprintf("Basic %s", alpacaOAuth))
-
-	var clock Clock
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	} else {
-		defer res.Body.Close()
-
-		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal(body, &clock)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &clock, nil
+	return clock, nil
 }
