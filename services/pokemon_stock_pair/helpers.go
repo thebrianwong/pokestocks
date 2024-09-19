@@ -1,9 +1,12 @@
 package pokemon_stock_pair
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"pokestocks/internal/structs"
+	redis_keys "pokestocks/redis"
+	"pokestocks/utils"
 	"time"
 
 	common_pb "pokestocks/proto/common"
@@ -91,4 +94,38 @@ func (s *Server) getAlpacaClock() (*alpaca.Clock, error) {
 		return nil, err
 	}
 	return clock, nil
+}
+
+func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
+	redisClient := s.RedisClient
+	redisPipeline := redisClient.Pipeline()
+
+	cachedMarketStatus, err := redisClient.Get(ctx, redis_keys.MarketStatusKey()).Result()
+	if err == nil {
+		return cachedMarketStatus == "open", nil
+	} else {
+		clock, err := s.getAlpacaClock()
+		if err != nil {
+			utils.LogWarningError("Error hitting Alpaca clock API", err)
+			return false, err
+		}
+
+		marketIsOpen := clock.IsOpen
+		if marketIsOpen {
+			marketCloseTime := clock.NextClose
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "open", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketCloseTime)
+		} else {
+			marketOpenTime := clock.NextOpen
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "close", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketOpenTime)
+		}
+
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			utils.LogWarningError("Error caching market status", err)
+		}
+
+		return marketIsOpen, nil
+	}
 }

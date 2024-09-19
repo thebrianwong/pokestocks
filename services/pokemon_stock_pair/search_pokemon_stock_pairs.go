@@ -25,40 +25,6 @@ type Clock struct {
 	NextClose time.Time `json:"next_close"`
 }
 
-func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
-	redisClient := s.RedisClient
-	redisPipeline := redisClient.Pipeline()
-
-	cachedMarketStatus, err := redisClient.Get(ctx, redis_keys.MarketStatusKey()).Result()
-	if err == nil {
-		return cachedMarketStatus == "open", nil
-	} else {
-		clock, err := s.getAlpacaClock()
-		if err != nil {
-			utils.LogWarningError("Error hitting Alpaca clock API", err)
-			return false, err
-		}
-
-		marketIsOpen := clock.IsOpen
-		if marketIsOpen {
-			marketCloseTime := clock.NextClose
-			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "open", 0)
-			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketCloseTime)
-		} else {
-			marketOpenTime := clock.NextOpen
-			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "close", 0)
-			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketOpenTime)
-		}
-
-		_, err = redisPipeline.Exec(ctx)
-		if err != nil {
-			utils.LogWarningError("Error caching market status", err)
-		}
-
-		return marketIsOpen, nil
-	}
-}
-
 func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
 	// preparingDbQuery := time.Now()
 
