@@ -64,13 +64,14 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 		redisPipeline.ExpireAt(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), midnightTomorrow)
 	}
 
+	if err = rows.Err(); err != nil {
+		utils.LogWarningError("Unable to attempt to cache PSP JSON to Redis due to error reading db rows", err)
+		return nil, err
+	}
+
 	_, err = redisPipeline.Exec(ctx)
 	if err != nil {
 		utils.LogWarningError("Error caching PSP JSON to Redis", err)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 
 	return psps, nil
