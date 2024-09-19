@@ -170,5 +170,5 @@ func LogSuccess(message string) {
 }
 
 func LogWarning(message string) {
-	log.Println(Yellow + message)
+	log.Println(Yellow + message + Reset)
 }
