@@ -68,7 +68,8 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 	nonCachedData := map[string]marketdata.Trade{}
 	var nextMarketOpen time.Time
 
-	// skip querying Alpaca if there are no cache misses
+	// this will always run when market is open
+	// skip querying Alpaca if there are no cache misses when market is close
 	if len(symbols) > 0 {
 		fmt.Println("symbols to get from alpaca", symbols)
 		fmt.Println("hitting alpaca")
