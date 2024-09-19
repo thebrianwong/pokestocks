@@ -50,6 +50,12 @@ func pspQueryString() string {
 	`
 }
 
+func midnightTomorrow() time.Time {
+	today := time.Now()
+	midnightTomorrow := time.Date(today.Year(), today.Month(), today.Day()+1, 0, 0, 0, 0, today.Location())
+	return midnightTomorrow
+}
+
 func convertDbRowToPokemonStockPair(rowDataMap map[string]any) *common_pb.PokemonStockPair {
 	psp := common_pb.PokemonStockPair{
 		Id: rowDataMap["pspId"].(int64),
