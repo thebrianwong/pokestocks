@@ -169,6 +169,10 @@ func LogSuccess(message string) {
 	log.Println(Green + message + Reset)
 }
 
+func LogWarningError(message string, err error) {
+	log.Println(Yellow+message+": %v"+Reset, err)
+}
+
 func LogWarning(message string) {
 	log.Println(Yellow + message + Reset)
 }

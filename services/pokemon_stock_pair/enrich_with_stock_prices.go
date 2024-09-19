@@ -21,7 +21,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 	marketIsOpen, err := s.isMarketOpen(ctx)
 	if err != nil {
-		utils.LogWarning(fmt.Sprintf("Error checking if market is open: %v", err))
+		utils.LogWarningError("Error checking if market is open", err)
 	}
 
 	symbols := []string{}
@@ -62,7 +62,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 			symbols = nonCachedSymbolsArr
 		} else {
-			utils.LogWarning(fmt.Sprintf("Error checking if cached data exists. Falling back to hitting the Alpaca API for all stock prices: %v", err))
+			utils.LogWarningError("Error checking if cached data exists. Falling back to hitting the Alpaca API for all stock prices", err)
 		}
 	}
 
@@ -81,13 +81,13 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 		cachedMarketOpen, err := redisClient.Get(ctx, redis_keys.NextMarketOpenKey()).Result()
 		if err != nil {
-			utils.LogWarning(fmt.Sprintf("Error checking next market open in redis: %v", err))
+			utils.LogWarningError("Error checking next market open in redis", err)
 		}
 
 		if cachedMarketOpen == "" {
 			clock, err := getAlpacaClock(alpacaTradingClient)
 			if err != nil {
-				utils.LogWarning(fmt.Sprintf("Error getting Alpaca clock for next market open. Defaulting to 3 hours: %v", err))
+				utils.LogWarningError("Error parsing date string to time.Time. Defaulting to 3 hours", err)
 				nextMarketOpen = time.Now().Add(time.Hour * 3)
 			} else {
 				nextMarketOpen = clock.NextOpen
@@ -96,13 +96,13 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 
 				_, err = redisPipeline.Exec(ctx)
 				if err != nil {
-					utils.LogWarning(fmt.Sprintf("Error caching next market open: %v", err))
+					utils.LogWarningError("Error caching next market open", err)
 				}
 			}
 		} else {
 			nextMarketOpen, err = time.Parse("2006-01-02T15:04:05-07:00", cachedMarketOpen)
 			if err != nil {
-				utils.LogWarning(fmt.Sprintf("Error parsing date string to time.Time. Defaulting to 3 hours: %v", err))
+				utils.LogWarningError("Error parsing date string to time.Time. Defaulting to 3 hours", err)
 				nextMarketOpen = time.Now().Add(time.Hour * 3)
 			}
 		}

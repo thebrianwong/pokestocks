@@ -36,7 +36,7 @@ func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 	} else {
 		clock, err := getAlpacaClock(alpacaTradingClient)
 		if err != nil {
-			utils.LogWarning(fmt.Sprintf("Error hitting Alpaca clock API: %v", err))
+			utils.LogWarningError("Error hitting Alpaca clock API", err)
 			return false, err
 		}
 
@@ -53,7 +53,7 @@ func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 
 		_, err = redisPipeline.Exec(ctx)
 		if err != nil {
-			utils.LogWarning(fmt.Sprintf("Error caching market status: %v", err))
+			utils.LogWarningError("Error caching market status", err)
 		}
 
 		return marketIsOpen, nil
@@ -184,7 +184,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		if err != nil {
 			// if there is something wrong with Redis and it can't answer our request,
 			// we can always just fallback to searching Elastic
-			utils.LogWarning(fmt.Sprintf("Error querying Redis key %v for cached PSP ids. Falling back to Elastic: %v", redis_keys.ElasticCacheKey(searchValue), err))
+			utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached PSP ids. Falling back to Elastic", err)
 		} else {
 			log.Println("cache miss, going to elastic")
 		}
@@ -223,7 +223,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		if err != nil {
 			// don't return a gRPC response with an error
 			// a response with data can still be generated even if we can't cache Elasticsearch results
-			utils.LogWarning(fmt.Sprintf("Error saving data to Redis for key %v. Skipping: %v", redis_keys.ElasticCacheKey(searchValue), err))
+			utils.LogWarningError("Error saving data to Redis for key "+redis_keys.ElasticCacheKey(searchValue)+". Skipping", err)
 		}
 	}
 
@@ -261,7 +261,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 
 	if len(cachedIds) == 0 && len(nonCachedIds) == 0 {
 		// something wrong with Redis and need to query db for all ids
-		utils.LogWarning(fmt.Sprintf("Error querying Redis key %v for cached JSON. Falling back to Elastic: %v", redis_keys.ElasticCacheKey(searchValue), err))
+		utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached JSON. Falling back to Elastic", err)
 		psps, err = s.queryDbForPokemonStockPairs(ctx, pspIds)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error querying data from db: %v", err)
