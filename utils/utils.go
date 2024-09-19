@@ -170,7 +170,7 @@ func LogSuccess(message string) {
 }
 
 func LogWarningError(message string, err error) {
-	log.Println(Yellow+message+": %v"+Reset, err)
+	log.Printf(Yellow+message+": %v"+Reset, err)
 }
 
 func LogWarning(message string) {
