@@ -29,3 +29,7 @@ func StockSymbolKey(symbol string) string {
 func GetSymbolFromStockSymbolKey(key string) string {
 	return strings.Split(key, "#")[1]
 }
+
+func NextMarketOpenKey() string {
+	return keyPrefix + "#nextMarketOpen"
+}
