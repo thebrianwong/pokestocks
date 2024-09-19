@@ -79,7 +79,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		}
 
 		cachedMarketOpen, err := redisClient.Get(ctx, redis_keys.NextMarketOpenKey()).Result()
-		if err != nil {
+		if err != nil && err != redis.Nil {
 			utils.LogWarningError("Error checking next market open in redis", err)
 		}
 
