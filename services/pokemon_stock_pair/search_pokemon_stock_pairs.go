@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	redis_keys "pokestocks/redis"
@@ -107,15 +106,12 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 	// fmt.Println("checkingForCachedElastic:", time.Since(checkingForCachedElastic))
 
 	if err == nil && len(cachedElasticIds) != 0 {
-		fmt.Println("from cache instead of elastic")
 		pspIds = cachedElasticIds
 	} else {
 		if err != nil {
 			// if there is something wrong with Redis and it can't answer our request,
 			// we can always just fallback to searching Elastic
 			utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached PSP ids. Falling back to Elastic", err)
-		} else {
-			log.Println("cache miss, going to elastic")
 		}
 		// searchingElastic := time.Now()
 		searchResults, err := s.searchElasticIndex(searchValue)

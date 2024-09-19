@@ -2,7 +2,6 @@ package pokemon_stock_pair
 
 import (
 	"context"
-	"fmt"
 	common_pb "pokestocks/proto/common"
 	redis_keys "pokestocks/redis"
 	"pokestocks/utils"
@@ -71,8 +70,6 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 	// this will always run when market is open
 	// skip querying Alpaca if there are no cache misses when market is close
 	if len(symbols) > 0 {
-		fmt.Println("symbols to get from alpaca", symbols)
-		fmt.Println("hitting alpaca")
 		requestParams := marketdata.GetLatestTradeRequest{}
 		nonCachedData, err = alpacaMarketDataClient.GetLatestTrades(symbols, requestParams)
 		if err != nil {
