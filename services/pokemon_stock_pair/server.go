@@ -15,6 +15,6 @@ type Server struct {
 	DB                     *pgxpool.Pool
 	ElasticClient          *elasticsearch.TypedClient
 	AlpacaMarketDataClient *marketdata.Client
-	AlpacaBrokerClient     *alpaca.Client
+	AlpacaTradingClient    *alpaca.Client
 	RedisClient            *redis.Client
 }
