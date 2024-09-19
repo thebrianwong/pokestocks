@@ -15,7 +15,6 @@ import (
 
 func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.PokemonStockPair) error {
 	alpacaMarketDataClient := s.AlpacaMarketDataClient
-	alpacaTradingClient := s.AlpacaTradingClient
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
 
@@ -85,7 +84,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		}
 
 		if cachedMarketOpen == "" {
-			clock, err := getAlpacaClock(alpacaTradingClient)
+			clock, err := s.getAlpacaClock()
 			if err != nil {
 				utils.LogWarningError("Error parsing date string to time.Time. Defaulting to 3 hours", err)
 				nextMarketOpen = time.Now().Add(time.Hour * 3)

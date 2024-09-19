@@ -85,8 +85,8 @@ func extractPokemonStockPairIds(docs []structs.PspElasticDocument) []string {
 	return ids
 }
 
-func getAlpacaClock(alpacaTradingClient *alpaca.Client) (*alpaca.Clock, error) {
-	clock, err := alpacaTradingClient.GetClock()
+func (s *Server) getAlpacaClock() (*alpaca.Clock, error) {
+	clock, err := s.AlpacaTradingClient.GetClock()
 	if err != nil {
 		return nil, err
 	}
