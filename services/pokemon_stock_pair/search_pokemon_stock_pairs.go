@@ -56,6 +56,7 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 	// processingDbQuery := time.Now()
 
 	var psps []*common_pb.PokemonStockPair
+	midnightTomorrow := midnightTomorrow()
 
 	for rows.Next() {
 		queriedData, err := pgx.RowToMap(rows)
@@ -71,7 +72,7 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 			return nil, err
 		}
 		redisPipeline.JSONSet(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), "$", string(jsonBytes))
-		redisPipeline.Expire(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), time.Second*10)
+		redisPipeline.ExpireAt(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), midnightTomorrow)
 	}
 
 	// savingDbKeys := time.Now()
@@ -142,8 +143,9 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 			}
 			sortedSet = append(sortedSet, sortedSetMember)
 		}
+		midnightTomorrow := midnightTomorrow()
 		redisPipeline.ZAdd(ctx, redis_keys.ElasticCacheKey(searchValue), sortedSet...)
-		redisPipeline.Expire(ctx, redis_keys.ElasticCacheKey(searchValue), time.Second*10)
+		redisPipeline.ExpireAt(ctx, redis_keys.ElasticCacheKey(searchValue), midnightTomorrow)
 
 		// savingElasticKeys := time.Now()
 		_, err = redisPipeline.Exec(ctx)
