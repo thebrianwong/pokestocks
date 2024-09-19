@@ -14,7 +14,8 @@ import (
 )
 
 func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.PokemonStockPair) error {
-	alpacaClient := s.AlpacaMarketDataClient
+	alpacaMarketDataClient := s.AlpacaMarketDataClient
+	alpacaTradingClient := s.AlpacaTradingClient
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
 
@@ -72,7 +73,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		fmt.Println("symbols to get from alpaca", symbols)
 		fmt.Println("hitting alpaca")
 		requestParams := marketdata.GetLatestTradeRequest{}
-		nonCachedData, err = alpacaClient.GetLatestTrades(symbols, requestParams)
+		nonCachedData, err = alpacaMarketDataClient.GetLatestTrades(symbols, requestParams)
 		if err != nil {
 			return err
 		}
