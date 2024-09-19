@@ -112,16 +112,20 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		priceData, ok := nonCachedData[psp.Stock.Symbol]
 		if ok {
 			psp.Stock.Price = &priceData.Price
-			redisPipeline.Set(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), priceData.Price, 0)
-			redisPipeline.ExpireAt(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), nextMarketOpen)
+			if !marketIsOpen {
+				redisPipeline.Set(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), priceData.Price, 0)
+				redisPipeline.ExpireAt(ctx, redis_keys.StockSymbolKey(psp.Stock.Symbol), nextMarketOpen)
+			}
 		} else {
 			psp.Stock.Price = cachedSymbolsMap[psp.Stock.Symbol]
 		}
 	}
 
-	_, err = redisPipeline.Exec(ctx)
-	if err != nil {
-		utils.LogWarning("Error caching stock prices")
+	if !marketIsOpen {
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			utils.LogWarning("Error caching stock prices")
+		}
 	}
 
 	return nil
