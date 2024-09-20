@@ -4,7 +4,6 @@ import (
 	"context"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
@@ -14,27 +13,9 @@ import (
 func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonStockPairRequest) (*psp_pb.GetPokemonStockPairResponse, error) {
 	db := s.DB
 
-	query := pspQueryString()
+	searchValue := in.Id
 
-	var searchValue string
-
-	switch input := in.Input.(type) {
-	case *psp_pb.GetPokemonStockPairRequest_PokemonName:
-		searchValue = input.PokemonName
-		query = query + `WHERE LOWER(pokemon."name") = LOWER($1)`
-	case *psp_pb.GetPokemonStockPairRequest_PokedexNumber:
-		searchValue = strconv.FormatInt(int64(input.PokedexNumber), 10)
-		query = query + "WHERE pokemon.pokedex_number = $1"
-	case *psp_pb.GetPokemonStockPairRequest_StockName:
-		searchValue = "%" + input.StockName + "%"
-		query = query + `WHERE LOWER(stocks."name") LIKE LOWER($1)`
-	case *psp_pb.GetPokemonStockPairRequest_StockSymbol:
-		searchValue = input.StockSymbol
-		query = query + "WHERE LOWER(stocks.symbol) = LOWER($1)"
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "input not provided")
-	}
-
+	query := pspQueryString() + "WHERE psp.id = $1"
 	rows, err := db.Query(ctx, query, searchValue)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error while querying for %v: %v", searchValue, err)
