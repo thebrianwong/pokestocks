@@ -10,11 +10,11 @@ func ElasticCacheKey(searchValue string) string {
 	return keyPrefix + ":elastic#" + searchValue
 }
 
-func DbCacheKey(id string) string {
-	return keyPrefix + ":db#" + id
+func DbCacheKey(identifier string) string {
+	return keyPrefix + ":db#" + identifier
 }
 
-func GetIdFromDbCacheKey(key string) string {
+func GetIdentifierFromDbCacheKey(key string) string {
 	return strings.Split(key, "#")[1]
 }
 
