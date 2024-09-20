@@ -80,7 +80,7 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	// startSearchPokemonStockPairs := time.Now()
 
-	searchValue := strings.ToUpper(in.SearchValue)
+	searchValue := in.SearchValue
 
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
