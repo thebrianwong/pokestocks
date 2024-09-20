@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"pokestocks/utils"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/create"
@@ -12,13 +13,22 @@ func main() {
 	utils.LoadEnvVars("../../.env")
 	elasticClient := utils.CreateTypedElasticClient("../../")
 
+	indexExists, err := elasticClient.Indices.Exists("pokemon_stock_pairs_index").Do(context.Background())
+	if err != nil {
+		utils.LogFailureError("Error checking if pokemon_stock_pairs_index exists", err)
+	}
+	if indexExists {
+		utils.LogSuccess("Exiting as pokemon_stock_pairs_index already exists")
+		os.Exit(0)
+	}
+
 	three := 3
 	twelve := 12
 	fifteen := 15
 	ngram_analyzer := "ngram_analyzer"
 	full_name_analyzer := "full_name_analyzer"
 
-	_, err := elasticClient.Indices.Create("pokemon_stock_pairs_index").Request(
+	_, err = elasticClient.Indices.Create("pokemon_stock_pairs_index").Request(
 		&create.Request{
 			Settings: &types.IndexSettings{
 				Analysis: &types.IndexSettingsAnalysis{
