@@ -162,7 +162,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 
 	if len(cachedIds) == 0 && len(nonCachedIds) == 0 {
 		// the above loop on results never occurred so the id arrays are both empty
-		utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached JSON. Falling back to Elastic", err)
+		utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached JSON. Falling back to db", err)
 		psps, err = s.queryDbForPokemonStockPairs(ctx, pspIds)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error querying data from db: %v", err)
