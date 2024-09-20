@@ -145,7 +145,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		for _, result := range results {
 			jsonString := result.(*redis.JSONCmd).Val()
 			key := result.(*redis.JSONCmd).Args()[1]
-			id := redis_keys.GetIdentifierFromDbCacheKey(key.(string))
+			id := redis_keys.GetIdFromDbCacheKey(key.(string))
 			if jsonString == "" {
 				nonCachedIds = append(nonCachedIds, id)
 			} else {
