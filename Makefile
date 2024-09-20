@@ -27,7 +27,7 @@ seed_db:
 	cd scripts/random_mapping/; \
 		go run main.go ${seasonName}
 
-compose: migrate_up seed_db remake_psp_index seed_psp_index
+compose: migrate_up seed_db create_psp_index seed_psp_index
 	air
 
 .PHONY: proto
@@ -36,11 +36,15 @@ proto:
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/**/*.proto
 
-remake_psp_index:
+delete_psp_index:
 	cd scripts/delete_pokemon_stock_pairs_index/; \
 		go run main.go
+
+create_psp_index:
 	cd scripts/create_pokemon_stock_pairs_index/; \
 		go run main.go
+
+remake_psp_index: delete_psp_index create_psp_index
 
 seed_psp_index:
 	cd scripts/index_pokemon_stock_pairs/; \
