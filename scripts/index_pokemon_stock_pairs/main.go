@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"pokestocks/utils"
 	"strings"
 
@@ -34,8 +35,12 @@ func main() {
 	if err != nil {
 		utils.LogFailureError("Error starting PSP indexing", err)
 	}
+	if count.Count == 1025 {
+		utils.LogSuccess("Exiting as index already contains expected PSPs")
+		os.Exit(0)
+	}
 	if count.Count > 0 {
-		utils.LogFailure("Error starting PSP indexing: the index already contains PSPs")
+		utils.LogFailure("Error starting PSP indexing: the index contains an unexpected number of PSPs")
 	}
 
 	query :=
