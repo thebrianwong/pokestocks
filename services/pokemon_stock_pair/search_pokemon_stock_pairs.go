@@ -11,6 +11,12 @@ import (
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	// startSearchPokemonStockPairs := time.Now()
 
+	argumentProvided := in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("searchValue"))
+
+	if !argumentProvided {
+		return nil, status.Errorf(codes.InvalidArgument, "searchValue argument not provided")
+	}
+
 	searchValue := in.SearchValue
 
 	pspIds, err := s.searchPokemonStockPairIds(ctx, searchValue)
