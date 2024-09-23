@@ -9,12 +9,14 @@ import (
 	redis_keys "pokestocks/redis"
 	"pokestocks/utils"
 	"slices"
+	"strings"
 	"time"
 
 	common_pb "pokestocks/proto/common"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
+	"github.com/jackc/pgx/v5"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -183,4 +185,65 @@ func (s *Server) isMarketOpen(ctx context.Context) (bool, error) {
 
 		return marketIsOpen, nil
 	}
+}
+
+func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
+	db := s.DB
+	redisClient := s.RedisClient
+	redisPipeline := redisClient.Pipeline()
+
+	query := pspQueryString()
+
+	queryArgs := []any{}
+	positionalParams := []string{}
+
+	for i, id := range pspIds {
+		queryArgs = append(queryArgs, id)
+		positionalParams = append(positionalParams, fmt.Sprintf("$%d", i+1))
+	}
+
+	orderByArgs := strings.Join(pspIds, ",")
+	queryArgs = append(queryArgs, orderByArgs)
+
+	positionalParamsString := strings.Join(positionalParams, ", ")
+	query += fmt.Sprintf("WHERE psp.id IN (%s)", positionalParamsString)
+	query += fmt.Sprintf("ORDER BY POSITION(psp.id::text IN $%d)", len(positionalParams)+1)
+
+	rows, err := db.Query(ctx, query, queryArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var psps []*common_pb.PokemonStockPair
+	midnightTomorrow := midnightTomorrow()
+
+	for rows.Next() {
+		queriedData, err := pgx.RowToMap(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		psp := convertDbRowToPokemonStockPair(queriedData)
+		psps = append(psps, psp)
+
+		jsonBytes, err := json.Marshal(psp)
+		if err != nil {
+			return nil, err
+		}
+		redisPipeline.JSONSet(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), "$", string(jsonBytes))
+		redisPipeline.ExpireAt(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), midnightTomorrow)
+	}
+
+	if err = rows.Err(); err != nil {
+		utils.LogWarningError("Unable to attempt to cache PSP JSON to Redis due to error reading db rows", err)
+		return nil, err
+	}
+
+	_, err = redisPipeline.Exec(ctx)
+	if err != nil {
+		utils.LogWarningError("Error caching PSP JSON to Redis", err)
+	}
+
+	return psps, nil
 }

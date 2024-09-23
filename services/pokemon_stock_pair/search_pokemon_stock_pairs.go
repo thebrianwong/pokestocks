@@ -8,74 +8,11 @@ import (
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	redis_keys "pokestocks/redis"
 	"pokestocks/utils"
-	"strings"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []string) ([]*common_pb.PokemonStockPair, error) {
-	db := s.DB
-	redisClient := s.RedisClient
-	redisPipeline := redisClient.Pipeline()
-
-	query := pspQueryString()
-
-	queryArgs := []any{}
-	positionalParams := []string{}
-
-	for i, id := range pspIds {
-		queryArgs = append(queryArgs, id)
-		positionalParams = append(positionalParams, fmt.Sprintf("$%d", i+1))
-	}
-
-	orderByArgs := strings.Join(pspIds, ",")
-	queryArgs = append(queryArgs, orderByArgs)
-
-	positionalParamsString := strings.Join(positionalParams, ", ")
-	query += fmt.Sprintf("WHERE psp.id IN (%s)", positionalParamsString)
-	query += fmt.Sprintf("ORDER BY POSITION(psp.id::text IN $%d)", len(positionalParams)+1)
-
-	rows, err := db.Query(ctx, query, queryArgs...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var psps []*common_pb.PokemonStockPair
-	midnightTomorrow := midnightTomorrow()
-
-	for rows.Next() {
-		queriedData, err := pgx.RowToMap(rows)
-		if err != nil {
-			return nil, err
-		}
-
-		psp := convertDbRowToPokemonStockPair(queriedData)
-		psps = append(psps, psp)
-
-		jsonBytes, err := json.Marshal(psp)
-		if err != nil {
-			return nil, err
-		}
-		redisPipeline.JSONSet(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), "$", string(jsonBytes))
-		redisPipeline.ExpireAt(ctx, redis_keys.DbCacheKey(fmt.Sprint(psp.Id)), midnightTomorrow)
-	}
-
-	if err = rows.Err(); err != nil {
-		utils.LogWarningError("Unable to attempt to cache PSP JSON to Redis due to error reading db rows", err)
-		return nil, err
-	}
-
-	_, err = redisPipeline.Exec(ctx)
-	if err != nil {
-		utils.LogWarningError("Error caching PSP JSON to Redis", err)
-	}
-
-	return psps, nil
-}
 
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	// startSearchPokemonStockPairs := time.Now()
