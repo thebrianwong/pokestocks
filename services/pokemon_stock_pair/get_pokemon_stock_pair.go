@@ -10,6 +10,12 @@ import (
 )
 
 func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonStockPairRequest) (*psp_pb.GetPokemonStockPairResponse, error) {
+	argumentProvided := in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("id"))
+
+	if !argumentProvided {
+		return nil, status.Errorf(codes.InvalidArgument, "id argument not provided")
+	}
+
 	pspId := in.Id
 
 	psp, err := s.queryPokemonStockPairs(ctx, []string{fmt.Sprint(pspId)})
