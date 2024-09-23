@@ -22,51 +22,12 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 	redisClient := s.RedisClient
 	redisPipeline := redisClient.Pipeline()
 
-	var pspIds []string
-
-	cachedElasticIds, err := redisClient.ZRange(ctx, redis_keys.ElasticCacheKey(searchValue), 0, -1).Result()
-	if err == nil && len(cachedElasticIds) != 0 {
-		pspIds = cachedElasticIds
-	} else {
-		if err != nil {
-			// if there is something wrong with Redis and it can't answer our request,
-			// we can always just fallback to searching Elastic
-			utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached PSP ids. Falling back to Elastic", err)
-		}
-		searchResults, err := s.searchElasticIndex(searchValue)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error searching Elastic data: %v", err)
-		}
-
-		elasticPsps, err := convertPokemonStockPairElasticDocuments(searchResults)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error formatting Elastic data: %v", err)
-		}
-		if len(elasticPsps) == 0 {
-			return &psp_pb.SearchPokemonStockPairsResponse{Data: nil}, nil
-		}
-
-		pspIds = extractPokemonStockPairIds(elasticPsps)
-
-		redisPipeline := redisClient.Pipeline()
-		sortedSet := []redis.Z{}
-		for i, id := range pspIds {
-			sortedSetMember := redis.Z{
-				Score:  float64(i),
-				Member: id,
-			}
-			sortedSet = append(sortedSet, sortedSetMember)
-		}
-		midnightTomorrow := midnightTomorrow()
-		redisPipeline.ZAdd(ctx, redis_keys.ElasticCacheKey(searchValue), sortedSet...)
-		redisPipeline.ExpireAt(ctx, redis_keys.ElasticCacheKey(searchValue), midnightTomorrow)
-
-		_, err = redisPipeline.Exec(ctx)
-		if err != nil {
-			// don't return a gRPC response with an error
-			// a response with data can still be generated even if we can't cache Elasticsearch results
-			utils.LogWarningError("Error caching data to Redis for key "+redis_keys.ElasticCacheKey(searchValue)+". Skipping", err)
-		}
+	pspIds, err := s.searchPokemonStockPairIds(ctx, searchValue)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error searching for PSP ids: %v", err)
+	}
+	if pspIds == nil {
+		return &psp_pb.SearchPokemonStockPairsResponse{Data: nil}, nil
 	}
 
 	cachedIds := []string{}

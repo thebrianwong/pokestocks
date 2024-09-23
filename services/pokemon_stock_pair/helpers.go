@@ -17,6 +17,7 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/jackc/pgx/v5"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -246,4 +247,57 @@ func (s *Server) queryDbForPokemonStockPairs(ctx context.Context, pspIds []strin
 	}
 
 	return psps, nil
+}
+
+func (s *Server) searchPokemonStockPairIds(ctx context.Context, searchValue string) ([]string, error) {
+	redisClient := s.RedisClient
+
+	var pspIds []string
+
+	cachedElasticIds, err := redisClient.ZRange(ctx, redis_keys.ElasticCacheKey(searchValue), 0, -1).Result()
+	if err == nil && len(cachedElasticIds) != 0 {
+		pspIds = cachedElasticIds
+	} else {
+		if err != nil {
+			// if there is something wrong with Redis and it can't answer our request,
+			// we can always just fallback to searching Elastic
+			utils.LogWarningError("Error querying Redis key "+redis_keys.ElasticCacheKey(searchValue)+" for cached PSP ids. Falling back to Elastic", err)
+		}
+		searchResults, err := s.searchElasticIndex(searchValue)
+		if err != nil {
+			return nil, err
+		}
+
+		elasticPsps, err := convertPokemonStockPairElasticDocuments(searchResults)
+		if err != nil {
+			return nil, err
+		}
+		if len(elasticPsps) == 0 {
+			return nil, nil
+		}
+
+		pspIds = extractPokemonStockPairIds(elasticPsps)
+
+		redisPipeline := redisClient.Pipeline()
+		sortedSet := []redis.Z{}
+		for i, id := range pspIds {
+			sortedSetMember := redis.Z{
+				Score:  float64(i),
+				Member: id,
+			}
+			sortedSet = append(sortedSet, sortedSetMember)
+		}
+		midnightTomorrow := midnightTomorrow()
+		redisPipeline.ZAdd(ctx, redis_keys.ElasticCacheKey(searchValue), sortedSet...)
+		redisPipeline.ExpireAt(ctx, redis_keys.ElasticCacheKey(searchValue), midnightTomorrow)
+
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			// don't return a gRPC response with an error
+			// a response with data can still be generated even if we can't cache Elasticsearch results
+			utils.LogWarningError("Error caching data to Redis for key "+redis_keys.ElasticCacheKey(searchValue)+". Skipping", err)
+		}
+	}
+
+	return pspIds, nil
 }
