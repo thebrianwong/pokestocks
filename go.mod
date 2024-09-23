@@ -6,6 +6,7 @@ require (
 	github.com/alpacahq/alpaca-trade-api-go/v3 v3.6.0
 	github.com/elastic/go-elasticsearch/v8 v8.15.0
 	github.com/jackc/pgx/v5 v5.6.0
+	github.com/redis/go-redis/v9 v9.6.1
 	google.golang.org/protobuf v1.34.2
 )
 
@@ -19,7 +20,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/redis/go-redis/v9 v9.6.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
