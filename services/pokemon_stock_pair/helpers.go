@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand/v2"
 	"pokestocks/internal/structs"
 	redis_keys "pokestocks/redis"
 	"pokestocks/utils"
+	"slices"
 	"time"
 
 	common_pb "pokestocks/proto/common"
@@ -54,6 +56,19 @@ func midnightTomorrow() time.Time {
 	today := time.Now()
 	midnightTomorrow := time.Date(today.Year(), today.Month(), today.Day()+1, 0, 0, 0, 0, today.Location())
 	return midnightTomorrow
+}
+
+func generateRandomIndices(indicesCount int, sliceLength int) []int {
+	var indices []int
+
+	for len(indices) < indicesCount {
+		index := rand.IntN(sliceLength)
+		if !slices.Contains(indices, index) {
+			indices = append(indices, index)
+		}
+	}
+
+	return indices
 }
 
 func convertDbRowToPokemonStockPair(rowDataMap map[string]any) *common_pb.PokemonStockPair {
