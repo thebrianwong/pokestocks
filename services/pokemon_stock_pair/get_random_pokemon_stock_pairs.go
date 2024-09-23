@@ -2,8 +2,10 @@ package pokemon_stock_pair
 
 import (
 	"context"
+	"fmt"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
@@ -11,6 +13,7 @@ import (
 )
 
 func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetRandomPokemonStockPairsRequest) (*psp_pb.GetRandomPokemonStockPairsResponse, error) {
+	start := time.Now()
 	db := s.DB
 
 	idQuery := `
@@ -70,6 +73,13 @@ func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetR
 	if err = rows.Err(); err != nil {
 		return nil, status.Errorf(codes.Internal, "error reading queried PSPs: %v", err)
 	}
+
+	err = s.enrichWithStockPrices(ctx, psps)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
+	}
+
+	fmt.Println("start", time.Since(start))
 
 	return &psp_pb.GetRandomPokemonStockPairsResponse{Data: psps}, nil
 }
