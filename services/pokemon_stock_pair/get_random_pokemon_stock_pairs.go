@@ -3,11 +3,9 @@ package pokemon_stock_pair
 import (
 	"context"
 	"fmt"
-	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -27,10 +25,10 @@ func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetR
 	}
 	defer idsRows.Close()
 
-	var ids []any
+	var ids []string
 
 	for idsRows.Next() {
-		var id int
+		var id string
 		err = idsRows.Scan(&id)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "error converting queried PSP ids: %v", err)
@@ -45,33 +43,15 @@ func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetR
 
 	randomIndices := generateRandomIndices(5, len(ids))
 
-	var pspIds []any
+	var pspIds []string
 
 	for _, randomIndex := range randomIndices {
-		pspIds = append(pspIds, randomIndex)
+		pspIds = append(pspIds, fmt.Sprint(randomIndex))
 	}
 
-	query := pspQueryString() + "WHERE psp.id IN ($1, $2, $3, $4, $5)"
-	rows, err := db.Query(context.Background(), query, pspIds...)
+	psps, err := s.queryPokemonStockPairs(ctx, pspIds)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error while querying PSPs: %v", err)
-	}
-	defer rows.Close()
-
-	var psps []*common_pb.PokemonStockPair
-
-	for rows.Next() {
-		queriedData, err := pgx.RowToMap(rows)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "error converting queried PSPs to maps: %v", err)
-		}
-
-		psp := convertDbRowToPokemonStockPair(queriedData)
-		psps = append(psps, psp)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, status.Errorf(codes.Internal, "error reading queried PSPs: %v", err)
+		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
 	err = s.enrichWithStockPrices(ctx, psps)
