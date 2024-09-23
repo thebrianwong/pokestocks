@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/pokemon_stock_pair";
+
+package pokemon_stock_pair;
+
+import "proto/common/pokemon_stock_pair.proto";
+
+message GetRandomPokemonStockPairsResponse {
+  repeated common.PokemonStockPair data = 1;
+}

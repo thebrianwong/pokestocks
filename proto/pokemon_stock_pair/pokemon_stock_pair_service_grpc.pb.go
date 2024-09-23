@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PokemonStockPairService_GetAllPokemonStockPairs_FullMethodName = "/pokemon_stock_pair.PokemonStockPairService/GetAllPokemonStockPairs"
-	PokemonStockPairService_GetPokemonStockPair_FullMethodName     = "/pokemon_stock_pair.PokemonStockPairService/GetPokemonStockPair"
-	PokemonStockPairService_SearchPokemonStockPairs_FullMethodName = "/pokemon_stock_pair.PokemonStockPairService/SearchPokemonStockPairs"
+	PokemonStockPairService_GetAllPokemonStockPairs_FullMethodName    = "/pokemon_stock_pair.PokemonStockPairService/GetAllPokemonStockPairs"
+	PokemonStockPairService_GetPokemonStockPair_FullMethodName        = "/pokemon_stock_pair.PokemonStockPairService/GetPokemonStockPair"
+	PokemonStockPairService_SearchPokemonStockPairs_FullMethodName    = "/pokemon_stock_pair.PokemonStockPairService/SearchPokemonStockPairs"
+	PokemonStockPairService_GetRandomPokemonStockPairs_FullMethodName = "/pokemon_stock_pair.PokemonStockPairService/GetRandomPokemonStockPairs"
 )
 
 // PokemonStockPairServiceClient is the client API for PokemonStockPairService service.
@@ -31,6 +32,7 @@ type PokemonStockPairServiceClient interface {
 	GetAllPokemonStockPairs(ctx context.Context, in *GetAllPokemonStockPairsRequest, opts ...grpc.CallOption) (*GetAllPokemonStockPairsResponse, error)
 	GetPokemonStockPair(ctx context.Context, in *GetPokemonStockPairRequest, opts ...grpc.CallOption) (*GetPokemonStockPairResponse, error)
 	SearchPokemonStockPairs(ctx context.Context, in *SearchPokemonStockPairsRequest, opts ...grpc.CallOption) (*SearchPokemonStockPairsResponse, error)
+	GetRandomPokemonStockPairs(ctx context.Context, in *GetRandomPokemonStockPairsRequest, opts ...grpc.CallOption) (*GetRandomPokemonStockPairsResponse, error)
 }
 
 type pokemonStockPairServiceClient struct {
@@ -71,6 +73,16 @@ func (c *pokemonStockPairServiceClient) SearchPokemonStockPairs(ctx context.Cont
 	return out, nil
 }
 
+func (c *pokemonStockPairServiceClient) GetRandomPokemonStockPairs(ctx context.Context, in *GetRandomPokemonStockPairsRequest, opts ...grpc.CallOption) (*GetRandomPokemonStockPairsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRandomPokemonStockPairsResponse)
+	err := c.cc.Invoke(ctx, PokemonStockPairService_GetRandomPokemonStockPairs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PokemonStockPairServiceServer is the server API for PokemonStockPairService service.
 // All implementations must embed UnimplementedPokemonStockPairServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type PokemonStockPairServiceServer interface {
 	GetAllPokemonStockPairs(context.Context, *GetAllPokemonStockPairsRequest) (*GetAllPokemonStockPairsResponse, error)
 	GetPokemonStockPair(context.Context, *GetPokemonStockPairRequest) (*GetPokemonStockPairResponse, error)
 	SearchPokemonStockPairs(context.Context, *SearchPokemonStockPairsRequest) (*SearchPokemonStockPairsResponse, error)
+	GetRandomPokemonStockPairs(context.Context, *GetRandomPokemonStockPairsRequest) (*GetRandomPokemonStockPairsResponse, error)
 	mustEmbedUnimplementedPokemonStockPairServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedPokemonStockPairServiceServer) GetPokemonStockPair(context.Co
 }
 func (UnimplementedPokemonStockPairServiceServer) SearchPokemonStockPairs(context.Context, *SearchPokemonStockPairsRequest) (*SearchPokemonStockPairsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchPokemonStockPairs not implemented")
+}
+func (UnimplementedPokemonStockPairServiceServer) GetRandomPokemonStockPairs(context.Context, *GetRandomPokemonStockPairsRequest) (*GetRandomPokemonStockPairsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRandomPokemonStockPairs not implemented")
 }
 func (UnimplementedPokemonStockPairServiceServer) mustEmbedUnimplementedPokemonStockPairServiceServer() {
 }
@@ -173,6 +189,24 @@ func _PokemonStockPairService_SearchPokemonStockPairs_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PokemonStockPairService_GetRandomPokemonStockPairs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRandomPokemonStockPairsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PokemonStockPairServiceServer).GetRandomPokemonStockPairs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PokemonStockPairService_GetRandomPokemonStockPairs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PokemonStockPairServiceServer).GetRandomPokemonStockPairs(ctx, req.(*GetRandomPokemonStockPairsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PokemonStockPairService_ServiceDesc is the grpc.ServiceDesc for PokemonStockPairService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -191,6 +225,10 @@ var PokemonStockPairService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchPokemonStockPairs",
 			Handler:    _PokemonStockPairService_SearchPokemonStockPairs_Handler,
+		},
+		{
+			MethodName: "GetRandomPokemonStockPairs",
+			Handler:    _PokemonStockPairService_GetRandomPokemonStockPairs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

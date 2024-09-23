@@ -10,9 +10,12 @@ import "proto/pokemon_stock_pair/get_pokemon_stock_pair_request.proto";
 import "proto/pokemon_stock_pair/get_pokemon_stock_pair_response.proto";
 import "proto/pokemon_stock_pair/search_pokemon_stock_pairs_request.proto";
 import "proto/pokemon_stock_pair/search_pokemon_stock_pairs_response.proto";
+import "proto/pokemon_stock_pair/get_random_pokemon_stock_pairs_request.proto";
+import "proto/pokemon_stock_pair/get_random_pokemon_stock_pairs_response.proto";
 
 service PokemonStockPairService {
   rpc GetAllPokemonStockPairs(GetAllPokemonStockPairsRequest) returns (GetAllPokemonStockPairsResponse);
   rpc GetPokemonStockPair(GetPokemonStockPairRequest) returns (GetPokemonStockPairResponse);
   rpc SearchPokemonStockPairs(SearchPokemonStockPairsRequest) returns (SearchPokemonStockPairsResponse);
+  rpc GetRandomPokemonStockPairs(GetRandomPokemonStockPairsRequest) returns (GetRandomPokemonStockPairsResponse);
 }
