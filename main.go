@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"os"
+	"pokestocks/internal/structs"
 	"pokestocks/utils"
 
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
@@ -26,15 +27,20 @@ func main() {
 		utils.LogFailureError("Failed to listen on port "+port, err)
 	}
 
+	clientConfig := structs.ClientConfig{
+		DB:                     conn,
+		ElasticClient:          elasticClient,
+		AlpacaMarketDataClient: alpacaMarketDataClient,
+		AlpacaTradingClient:    alpacaTradingClient,
+		RedisClient:            redisClient,
+	}
+
 	s := grpc.NewServer()
 	psp_pb.RegisterPokemonStockPairServiceServer(
 		s,
 		&psp_service.Server{
-			DB:                     conn,
-			ElasticClient:          elasticClient,
-			AlpacaMarketDataClient: alpacaMarketDataClient,
-			AlpacaTradingClient:    alpacaTradingClient,
-			RedisClient:            redisClient,
+			UnimplementedPokemonStockPairServiceServer: &psp_pb.UnimplementedPokemonStockPairServiceServer{},
+			ClientConfig: &clientConfig,
 		},
 	)
 
