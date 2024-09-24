@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/transaction";
+
+package transaction;
+
+import "proto/transaction/place_buy_order_request.proto";
+import "proto/transaction/place_buy_order_response.proto";
+
+service TransactionService {
+  rpc PlaceBuyOrder(PlaceBuyOrderRequest) returns (PlaceBuyOrderResponse);
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "pokestocks/proto/transaction";
+
+package transaction;
+
+message PlaceBuyOrderResponse {
+  string message = 1;
+}
