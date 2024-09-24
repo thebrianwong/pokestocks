@@ -9,6 +9,9 @@ import (
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	psp_service "pokestocks/services/pokemon_stock_pair"
 
+	transaction_pb "pokestocks/proto/transaction"
+	transaction_service "pokestocks/services/transaction"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -41,6 +44,13 @@ func main() {
 		&psp_service.Server{
 			UnimplementedPokemonStockPairServiceServer: &psp_pb.UnimplementedPokemonStockPairServiceServer{},
 			ClientConfig: &clientConfig,
+		},
+	)
+	transaction_pb.RegisterTransactionServiceServer(
+		s,
+		&transaction_service.Server{
+			UnimplementedTransactionServiceServer: &transaction_pb.UnimplementedTransactionServiceServer{},
+			ClientConfig:                          &clientConfig,
 		},
 	)
 
