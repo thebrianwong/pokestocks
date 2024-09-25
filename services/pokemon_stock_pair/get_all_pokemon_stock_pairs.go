@@ -2,6 +2,7 @@ package pokemon_stock_pair
 
 import (
 	"context"
+	"pokestocks/internal/helpers"
 	common_pb "pokestocks/proto/common"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 
@@ -13,7 +14,7 @@ import (
 func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllPokemonStockPairsRequest) (*psp_pb.GetAllPokemonStockPairsResponse, error) {
 	db := s.DB
 
-	query := pspQueryString() + "ORDER BY pokemon.id"
+	query := helpers.PspQueryString() + "ORDER BY pokemon.id"
 
 	rows, err := db.Query(ctx, query)
 	if err != nil {
@@ -29,7 +30,7 @@ func (s *Server) GetAllPokemonStockPairs(ctx context.Context, in *psp_pb.GetAllP
 			return nil, status.Errorf(codes.Internal, "error converting queried data to map: %v", err)
 		}
 
-		psp := convertDbRowToPokemonStockPair(queriedData)
+		psp := helpers.ConvertDbRowToPokemonStockPair(queriedData)
 		psps = append(psps, psp)
 	}
 

@@ -20,12 +20,12 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 
 	pspId := in.Id
 
-	psp, err := s.queryPokemonStockPairs(ctx, []string{fmt.Sprint(pspId)})
+	psp, err := cm.QueryPokemonStockPairs(ctx, []string{fmt.Sprint(pspId)})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
-	err = s.enrichWithStockPrices(ctx, psp)
+	err = cm.EnrichWithStockPrices(ctx, psp)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 	}

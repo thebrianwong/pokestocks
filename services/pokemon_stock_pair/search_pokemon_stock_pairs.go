@@ -20,7 +20,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 
 	searchValue := in.SearchValue
 
-	pspIds, err := s.searchPokemonStockPairIds(ctx, searchValue)
+	pspIds, err := cc.SearchPokemonStockPairIds(ctx, searchValue)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error searching for PSP ids: %v", err)
 	}
@@ -28,12 +28,12 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		return &psp_pb.SearchPokemonStockPairsResponse{Data: nil}, nil
 	}
 
-	psps, err := s.queryPokemonStockPairs(ctx, pspIds)
+	psps, err := cc.QueryPokemonStockPairs(ctx, pspIds)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
-	err = s.enrichWithStockPrices(ctx, psps)
+	err = cc.EnrichWithStockPrices(ctx, psps)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 	}

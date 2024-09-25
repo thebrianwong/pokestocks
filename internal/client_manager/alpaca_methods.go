@@ -1,4 +1,4 @@
-package pokemon_stock_pair
+package client_manager
 
 import (
 	"context"
@@ -8,16 +8,59 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 	"github.com/redis/go-redis/v9"
 )
 
-func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.PokemonStockPair) error {
-	alpacaMarketDataClient := s.AlpacaMarketDataClient
-	redisClient := s.RedisClient
+func (cc *ClientManager) GetAlpacaClock() (*alpaca.Clock, error) {
+	clock, err := cc.AlpacaTradingClient.GetClock()
+	if err != nil {
+		return nil, err
+	}
+	return clock, nil
+}
+
+func (cc *ClientManager) IsMarketOpen(ctx context.Context) (bool, error) {
+	redisClient := cc.RedisClient
 	redisPipeline := redisClient.Pipeline()
 
-	marketIsOpen, err := s.isMarketOpen(ctx)
+	cachedMarketStatus, err := redisClient.Get(ctx, redis_keys.MarketStatusKey()).Result()
+	if err == nil {
+		return cachedMarketStatus == "open", nil
+	} else {
+		clock, err := cc.GetAlpacaClock()
+		if err != nil {
+			utils.LogWarningError("Error calling Alpaca clock API", err)
+			return false, err
+		}
+
+		marketIsOpen := clock.IsOpen
+		if marketIsOpen {
+			marketCloseTime := clock.NextClose
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "open", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketCloseTime)
+		} else {
+			marketOpenTime := clock.NextOpen
+			redisPipeline.Set(ctx, redis_keys.MarketStatusKey(), "close", 0)
+			redisPipeline.ExpireAt(ctx, redis_keys.MarketStatusKey(), marketOpenTime)
+		}
+
+		_, err = redisPipeline.Exec(ctx)
+		if err != nil {
+			utils.LogWarningError("Error caching market status to Redis", err)
+		}
+
+		return marketIsOpen, nil
+	}
+}
+
+func (cc *ClientManager) EnrichWithStockPrices(ctx context.Context, psps []*common_pb.PokemonStockPair) error {
+	alpacaMarketDataClient := cc.AlpacaMarketDataClient
+	redisClient := cc.RedisClient
+	redisPipeline := redisClient.Pipeline()
+
+	marketIsOpen, err := cc.IsMarketOpen(ctx)
 	if err != nil {
 		utils.LogWarningError("Error checking if market is open", err)
 	}
@@ -82,7 +125,7 @@ func (s *Server) enrichWithStockPrices(ctx context.Context, psps []*common_pb.Po
 		}
 
 		if cachedMarketOpen == "" {
-			clock, err := s.getAlpacaClock()
+			clock, err := cc.GetAlpacaClock()
 			if err != nil {
 				utils.LogWarningError("Error parsing date string to time.Time. Defaulting to 3 hours", err)
 				nextMarketOpen = time.Now().Add(time.Hour * 3)

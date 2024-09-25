@@ -3,6 +3,7 @@ package pokemon_stock_pair
 import (
 	"context"
 	"fmt"
+	"pokestocks/internal/helpers"
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
 	"time"
 
@@ -42,7 +43,7 @@ func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetR
 		return nil, status.Errorf(codes.Internal, "error reading queried PSP ids: %v", err)
 	}
 
-	randomIndices := generateRandomIndices(5, len(ids))
+	randomIndices := helpers.GenerateRandomIndices(5, len(ids))
 
 	var pspIds []string
 
@@ -50,12 +51,12 @@ func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetR
 		pspIds = append(pspIds, fmt.Sprint(randomIndex))
 	}
 
-	psps, err := s.queryPokemonStockPairs(ctx, pspIds)
+	psps, err := cm.QueryPokemonStockPairs(ctx, pspIds)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
-	err = s.enrichWithStockPrices(ctx, psps)
+	err = cm.EnrichWithStockPrices(ctx, psps)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 	}
