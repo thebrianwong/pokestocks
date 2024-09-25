@@ -3,6 +3,7 @@ package client_manager
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"pokestocks/internal/helpers"
 	"pokestocks/utils"
@@ -113,13 +114,17 @@ func (cc *ClientManager) QueryPokemonStockPairs(ctx context.Context, pspIds []st
 		// the above loop on results never occurred so the id arrays are both empty
 		utils.LogWarningError("Error querying Redis key for cached PSPs. Falling back to db", err)
 		psps, err = cc.queryDbForPokemonStockPairs(ctx, pspIds)
-		if err != nil {
+		if len(psps) == 0 {
+			return nil, errors.New("requested PSP does not exist")
+		} else if err != nil {
 			return nil, err
 		}
 	} else if len(nonCachedIds) > 0 {
 		// 1 or more cache misses require querying db
 		nonCachedPspsArr, err := cc.queryDbForPokemonStockPairs(ctx, nonCachedIds)
-		if err != nil {
+		if len(psps) == 0 {
+			return nil, errors.New("requested PSP does not exist")
+		} else if err != nil {
 			return nil, err
 		}
 
