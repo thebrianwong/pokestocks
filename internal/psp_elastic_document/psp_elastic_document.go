@@ -1,4 +1,4 @@
-package structs
+package psp_elastic_document
 
 type PspNestedPokemon struct {
 	Id            int64  `json:"id"`
