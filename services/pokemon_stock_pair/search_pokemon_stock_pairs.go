@@ -10,7 +10,7 @@ import (
 
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	// startSearchPokemonStockPairs := time.Now()
-	cc := s.ClientManager
+	cm := s.ClientManager
 
 	argumentProvided := in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("searchValue"))
 
@@ -20,7 +20,7 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 
 	searchValue := in.SearchValue
 
-	pspIds, err := cc.SearchPokemonStockPairIds(ctx, searchValue)
+	pspIds, err := cm.SearchPokemonStockPairIds(ctx, searchValue)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error searching for PSP ids: %v", err)
 	}
@@ -28,12 +28,12 @@ func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchP
 		return &psp_pb.SearchPokemonStockPairsResponse{Data: nil}, nil
 	}
 
-	psps, err := cc.QueryPokemonStockPairs(ctx, pspIds)
+	psps, err := cm.QueryPokemonStockPairs(ctx, pspIds)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
-	err = cc.EnrichWithStockPrices(ctx, psps)
+	err = cm.EnrichWithStockPrices(ctx, psps)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying Alpaca for price data: %v", err)
 	}
