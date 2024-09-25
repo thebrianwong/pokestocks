@@ -21,9 +21,11 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 		return nil, status.Errorf(codes.InvalidArgument, "missing arguments")
 	}
 
-	stockQuantity := float64(in.Quantity)
+	portfolioId := in.PortfolioId
+	pspId := []string{fmt.Sprint(in.PspId)}
+	quantity := float64(in.Quantity)
 
-	psps, err := cm.QueryPokemonStockPairs(ctx, []string{fmt.Sprint(in.PspId)})
+	psps, err := cm.QueryPokemonStockPairs(ctx, pspId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
@@ -36,9 +38,9 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 	psp := psps[0]
 	stockPrice := *psp.Stock.Price
 
-	totalPrice := stockPrice * stockQuantity
+	totalPrice := stockPrice * quantity
 
-	cash, err := cm.QueryPortfolioCash(ctx, in.PortfolioId)
+	cash, err := cm.QueryPortfolioCash(ctx, portfolioId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error querying portfolio cash: %v", err)
 	}
