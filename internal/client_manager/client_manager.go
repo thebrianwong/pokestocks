@@ -1,4 +1,4 @@
-package structs
+package client_manager
 
 import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
@@ -8,7 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type ClientConfig struct {
+type ClientManager struct {
 	DB                     *pgxpool.Pool
 	ElasticClient          *elasticsearch.TypedClient
 	AlpacaMarketDataClient *marketdata.Client

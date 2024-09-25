@@ -10,6 +10,7 @@ import (
 
 func (s *Server) SearchPokemonStockPairs(ctx context.Context, in *psp_pb.SearchPokemonStockPairsRequest) (*psp_pb.SearchPokemonStockPairsResponse, error) {
 	// startSearchPokemonStockPairs := time.Now()
+	cc := s.ClientManager
 
 	argumentProvided := in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("searchValue"))
 

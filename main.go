@@ -3,7 +3,7 @@ package main
 import (
 	"net"
 	"os"
-	"pokestocks/internal/structs"
+	cm "pokestocks/internal/client_manager"
 	"pokestocks/utils"
 
 	psp_pb "pokestocks/proto/pokemon_stock_pair"
@@ -30,7 +30,7 @@ func main() {
 		utils.LogFailureError("Failed to listen on port "+port, err)
 	}
 
-	clientConfig := structs.ClientConfig{
+	clientManager := cm.ClientManager{
 		DB:                     conn,
 		ElasticClient:          elasticClient,
 		AlpacaMarketDataClient: alpacaMarketDataClient,
@@ -43,14 +43,14 @@ func main() {
 		s,
 		&psp_service.Server{
 			UnimplementedPokemonStockPairServiceServer: &psp_pb.UnimplementedPokemonStockPairServiceServer{},
-			ClientConfig: &clientConfig,
+			ClientManager: &clientManager,
 		},
 	)
 	transaction_pb.RegisterTransactionServiceServer(
 		s,
 		&transaction_service.Server{
 			UnimplementedTransactionServiceServer: &transaction_pb.UnimplementedTransactionServiceServer{},
-			ClientConfig:                          &clientConfig,
+			ClientManager:                         &clientManager,
 		},
 	)
 

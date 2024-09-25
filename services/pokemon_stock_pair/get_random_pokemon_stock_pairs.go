@@ -12,7 +12,8 @@ import (
 
 func (s *Server) GetRandomPokemonStockPairs(ctx context.Context, in *psp_pb.GetRandomPokemonStockPairsRequest) (*psp_pb.GetRandomPokemonStockPairsResponse, error) {
 	start := time.Now()
-	db := s.DB
+	cm := s.ClientManager
+	db := cm.DB
 
 	idQuery := `
 		SELECT id
