@@ -50,6 +50,9 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 
 	cash, err := cm.QueryPortfolioCash(ctx, portfolioId)
 	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return nil, status.Error(codes.NotFound, "error querying portfolio cash: requested portfolio does not exist")
+		}
 		return nil, status.Errorf(codes.Internal, "error querying portfolio cash: %v", err)
 	}
 
