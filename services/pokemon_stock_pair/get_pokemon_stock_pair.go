@@ -22,9 +22,6 @@ func (s *Server) GetPokemonStockPair(ctx context.Context, in *psp_pb.GetPokemonS
 
 	psp, err := cm.QueryPokemonStockPairs(ctx, []string{fmt.Sprint(pspId)})
 	if err != nil {
-		if err.Error() == "requested PSP does not exist" {
-			return nil, status.Error(codes.NotFound, err.Error())
-		}
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
