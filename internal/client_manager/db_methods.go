@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"pokestocks/internal/helpers"
 	"pokestocks/utils"
+	"strconv"
 	"strings"
 
 	common_pb "pokestocks/proto/common"
@@ -143,4 +144,27 @@ func (cc *ClientManager) QueryPokemonStockPairs(ctx context.Context, pspIds []st
 	}
 
 	return psps, nil
+}
+
+func (cm *ClientManager) QueryPortfolioCash(ctx context.Context, portfolioId int64) (float64, error) {
+	db := cm.DB
+
+	query := `
+		SELECT cash
+		FROM portfolios
+		WHERE id = $1
+	`
+	var cashString string
+
+	err := db.QueryRow(ctx, query, portfolioId).Scan(&cashString)
+	if err != nil {
+		return 0, err
+	}
+
+	cash, err := strconv.ParseFloat(cashString, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return cash, nil
 }
