@@ -25,6 +25,9 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 
 	psps, err := cm.QueryPokemonStockPairs(ctx, []string{fmt.Sprint(in.PspId)})
 	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return nil, status.Errorf(codes.NotFound, "portfolio does not exist: %v", err)
+		}
 		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
 	}
 
