@@ -12,6 +12,15 @@ import (
 func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyOrderRequest) (*transaction_pb.PlaceBuyOrderResponse, error) {
 	cm := s.ClientManager
 
+	argumentsProvided :=
+		in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("portfolioId")) &&
+			in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("pspId")) &&
+			in.ProtoReflect().Has(in.ProtoReflect().Descriptor().Fields().ByName("quantity"))
+
+	if !argumentsProvided {
+		return nil, status.Errorf(codes.InvalidArgument, "missing arguments")
+	}
+
 	stockQuantity := float64(in.Quantity)
 
 	psps, err := cm.QueryPokemonStockPairs(ctx, []string{fmt.Sprint(in.PspId)})
