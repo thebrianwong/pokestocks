@@ -31,7 +31,11 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 
 	psps, err := cm.QueryPokemonStockPairs(ctx, pspId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error querying PSPs: %v", err)
+		errorCode := codes.Internal
+		if err.Error() == "requested PSP does not exist" {
+			errorCode = codes.NotFound
+		}
+		return nil, status.Errorf(errorCode, "error querying PSPs: %v", err)
 	}
 
 	err = cm.EnrichWithStockPrices(ctx, psps)
