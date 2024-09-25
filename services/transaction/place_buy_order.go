@@ -58,5 +58,9 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 
 	hasSufficientCash := cash >= totalPrice
 
+	if !hasSufficientCash {
+		return nil, status.Error(codes.FailedPrecondition, "the portfolio contains insufficient cash to place this buy order")
+	}
+
 	return &transaction_pb.PlaceBuyOrderResponse{Message: fmt.Sprint(hasSufficientCash)}, nil
 }
