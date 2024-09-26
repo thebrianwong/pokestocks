@@ -23,7 +23,7 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 
 	portfolioId := in.PortfolioId
 	pspId := []string{fmt.Sprint(in.PspId)}
-	quantity := float64(in.Quantity)
+	quantity := in.Quantity
 
 	if quantity < 1 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid quantity argument")
@@ -46,7 +46,7 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 	psp := psps[0]
 	stockPrice := *psp.Stock.Price
 
-	totalPrice := stockPrice * quantity
+	totalPrice := stockPrice * float64(quantity)
 
 	cash, err := cm.QueryPortfolioCash(ctx, portfolioId)
 	if err != nil {
@@ -62,5 +62,14 @@ func (s *Server) PlaceBuyOrder(ctx context.Context, in *transaction_pb.PlaceBuyO
 		return nil, status.Error(codes.FailedPrecondition, "the portfolio contains insufficient cash to place this buy order")
 	}
 
-	return &transaction_pb.PlaceBuyOrderResponse{Message: fmt.Sprint(hasSufficientCash)}, nil
+	err = cm.TransactBuyOrder(ctx, portfolioId, psp.Id, quantity, stockPrice)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error completing buy order transaction: %v", err)
+	}
+
+	return &transaction_pb.PlaceBuyOrderResponse{
+		Message: fmt.Sprintf(
+			`Success buying %d shares of %s corresponding to PSP id %d and Pokemon %s for %f a share. Total Price: %f. Current Cash: %f`, quantity, psp.Stock.Symbol, psp.Id, psp.Pokemon.Name, stockPrice, totalPrice, (cash - totalPrice),
+		),
+	}, nil
 }

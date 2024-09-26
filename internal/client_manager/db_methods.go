@@ -173,3 +173,54 @@ func (cm *ClientManager) QueryPortfolioCash(ctx context.Context, portfolioId int
 
 	return cash, nil
 }
+
+func (cm *ClientManager) TransactBuyOrder(ctx context.Context, portfolioId int64, pspId int64, quantity int32, price float64) error {
+	db := cm.DB
+
+	options := pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.Deferrable}
+	tx, err := db.BeginTx(ctx, options)
+	if err != nil {
+		// utils.LogFailureError("Error starting db transaction", err)
+		return err
+	}
+
+	defer tx.Rollback(ctx)
+
+	batch := pgx.Batch{}
+
+	orderCost := price * float64(quantity)
+	portfolioQuery := `
+		UPDATE portfolios
+		SET cash = cash - $1
+		WHERE id = $2
+	`
+	batch.Queue(portfolioQuery, orderCost, portfolioId)
+
+	holdingsQuery := `
+		INSERT INTO holdings(portfolio_id, pokemon_stock_pair_id, quantity)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (portfolio_id, pokemon_stock_pair_id) DO UPDATE
+		SET quantity = holdings.quantity + EXCLUDED.quantity
+	`
+	batch.Queue(holdingsQuery, portfolioId, pspId, quantity)
+
+	transactionsQuery := `
+		INSERT INTO transactions(portfolio_id, pokemon_stock_pair_id, quantity, price, buy)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	batch.Queue(transactionsQuery, portfolioId, pspId, quantity, price, true)
+
+	err = db.SendBatch(ctx, &batch).Close()
+	if err != nil {
+		// utils.LogFailureError("Error sending batch inserts", err)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		// utils.LogFailureError("Error committing db transaction", err)
+		return err
+	}
+
+	return nil
+}
